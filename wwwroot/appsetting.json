@@ -1,0 +1,6 @@
+{
+  "AppConfigurations": {
+    "BackendUrl" : "https://localhost:7060/",
+    "FrontendUrl" : "https://localhost:7560/"
+  }
+}
