@@ -1,27 +1,50 @@
 namespace HowClient.Services.Auth;
 
+using ClientAPI;
 using Infrastructure.DTO.Auth;
 using Infrastructure.Models.Services.Auth;
+using ResultType;
 
 public class AuthServices : IAuthServices
 {
-    public Task Login(LoginRequestDTO request)
+    private readonly AuthorizedClientAPI _authorizedClientApi;
+    
+    public AuthServices(AuthorizedClientAPI authorizedClientApi)
     {
-        throw new NotImplementedException();
+        _authorizedClientApi = authorizedClientApi;
     }
 
-    public Task Register(RegisterRequestDTO request)
+    public async Task Login(LoginRequestDTO request)
     {
-        throw new NotImplementedException();
+        await _authorizedClientApi.PostAsync<ResultResponse, LoginRequestDTO>("api/account/login", request);
     }
 
-    public Task Logout()
+    public async Task Register(RegisterRequestDTO request)
     {
-        throw new NotImplementedException();
+        await _authorizedClientApi.PostAsync<ResultResponse, RegisterRequestDTO>("api/account/register", request);
     }
 
-    public Task<CurrentUser> CurrentUserInfo()
+    public async Task Logout()
     {
-        throw new NotImplementedException();
+        await _authorizedClientApi.PostAsync<ResultResponse>("api/account/logout");
+    }
+
+    public async Task<CurrentUser> CurrentUserInfo()
+    {
+        var response = await _authorizedClientApi.GetAsync<ResultResponse<CurrentUserResponseDTO>>("api/account/current-user-info");
+
+        if (response.Data is null)
+        {
+            return new CurrentUser();
+        }
+
+        var result = new CurrentUser
+        {
+            IsAuthenticate = response.Data.IsAuthenticate,
+            UserName = response.Data.UserName,
+            Claims = response.Data.Claims
+        };
+
+        return result;
     }
 }

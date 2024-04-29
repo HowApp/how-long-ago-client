@@ -1,6 +1,6 @@
 namespace HowClient.Services.ClientAPI;
 
-public class AnonymousClientAPI : BaseClientAPI
+public sealed class AnonymousClientAPI : BaseClientAPI
 {
     public AnonymousClientAPI(HttpClient httpClient) : base(httpClient)
     {
