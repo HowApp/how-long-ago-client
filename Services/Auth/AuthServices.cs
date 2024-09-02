@@ -16,22 +16,22 @@ public class AuthServices : IAuthServices
 
     public async Task Login(LoginRequestDTO request)
     {
-        await _authorizedClientApi.PostAsync<ResultResponse, LoginRequestDTO>("api/account/login", request);
+        await _authorizedClientApi.PostAsync<ResultResponse, LoginRequestDTO>("api/identity/login", request);
     }
 
     public async Task Register(RegisterRequestDTO request)
     {
-        await _authorizedClientApi.PostAsync<ResultResponse, RegisterRequestDTO>("api/account/register", request);
+        await _authorizedClientApi.PostAsync<ResultResponse, RegisterRequestDTO>("api/identity/register", request);
     }
 
     public async Task Logout()
     {
-        await _authorizedClientApi.PostAsync<ResultResponse>("api/account/logout");
+        await _authorizedClientApi.PostAsync<ResultResponse>("api/identity/logout");
     }
 
     public async Task<CurrentUser> CurrentUserInfo()
     {
-        var response = await _authorizedClientApi.GetAsync<ResultResponse<CurrentUserResponseDTO>>("api/account/current-user-info");
+        var response = await _authorizedClientApi.GetAsync<ResultResponse<CurrentUserResponseDTO>>("api/identity/current-user-info");
 
         if (response.Data is null)
         {
