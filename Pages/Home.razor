@@ -1,5 +1,9 @@
 ﻿@page "/"
+@using HowClient.Infrastructure.DTO.Public.Event
+@using HowClient.Services.Public.Event
 @using Microsoft.AspNetCore.Components.Authorization
+
+@inject IEventService _EventService
 
 <PageTitle>Home</PageTitle>
 
@@ -16,11 +20,15 @@
 
 <div>Hello user</div>
 
+<button class="btn btn-primary" @onclick="LoadEvents">Click me</button>
+
 @code{
     string? UserName { get; set; }
 
     [CascadingParameter]
     Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private GetEventsPaginationPublicResponseDTO Events = new ();
 
     protected override async Task OnInitializedAsync()
     {
@@ -34,5 +42,14 @@
                 UserName = user.Identity.Name;
             }
         }
+
+        
+    }
+
+    private async Task LoadEvents()
+    {
+        var result = await _EventService.GetEventsPagination();
+        
+        Console.WriteLine("uu");
     }
 }
