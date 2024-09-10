@@ -27,9 +27,8 @@ public class EventService : IEventService
             var url = QueryHelpers.AddQueryString("api/public/event/list-pagination", queryParams);
             
             var response = await _anonymousClientApi.GetAsync<ResultResponse<GetEventsPaginationPublicResponseDTO>>(url);
-
-            Console.WriteLine("wwww");
-            return new GetEventsPaginationPublicResponseDTO();
+            
+            return response.Data;
         }
         catch (HttpRequestException e)
         {
