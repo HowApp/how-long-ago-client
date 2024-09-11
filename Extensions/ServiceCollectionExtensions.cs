@@ -2,6 +2,7 @@ namespace HowClient.Extensions;
 
 using Configuration;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Options;
 using Services.Auth;
 using Services.CookieHandler;
 using Services.Provider;
@@ -30,9 +31,10 @@ public static class ServiceCollectionExtensions
     
     public static IServiceCollection AddConfigurations(this IServiceCollection services, IConfiguration configuration)
     {
-        var appConfigurations = new AppConfigurations();
-        configuration.Bind(appConfigurations);
-        services.AddSingleton(appConfigurations);
+        services.Configure<AppConfigurations>(configuration.GetSection(nameof(AppConfigurations)));
+        
+        services.AddSingleton(resolver =>
+            resolver.GetRequiredService<IOptions<AppConfigurations>>().Value);
         
         return services;
     }
