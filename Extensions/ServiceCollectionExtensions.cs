@@ -13,11 +13,12 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection SetupServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddConfigurations(configuration)
-            .AddCustomServices();
+            .AddCustomServices()
+            .AddBlazorBootstrap();
 
         return services;
     }
-    
+
     public static IServiceCollection AddCustomServices(this IServiceCollection services)
     {
         services.AddScoped<CookieHandler>();

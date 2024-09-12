@@ -14,16 +14,20 @@ public class EventService : IEventService
         _anonymousClientApi = anonymousClientApi;
     }
 
-    public async Task<GetEventsPaginationPublicResponseDTO> GetEventsPagination()
+    public async Task<GetEventsPaginationPublicResponseDTO> GetEventsPagination(int pageNumber, int pageSize, string search)
     {
         try
         {
             var queryParams = new Dictionary<string, string>
             {
-                { "page", "1" },
-                { "pageSize", "10" },
-                // { "search", "" }
+                { "Page", pageNumber.ToString() },
+                { "Size", pageSize.ToString() }
             };
+            if (!string.IsNullOrEmpty(search))
+            {
+                queryParams.Add("search", search);
+            }
+            
             var url = QueryHelpers.AddQueryString("api/public/event/list-pagination", queryParams);
             
             var response = await _anonymousClientApi.GetAsync<ResultResponse<GetEventsPaginationPublicResponseDTO>>(url);

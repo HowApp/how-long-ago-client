@@ -70,6 +70,10 @@
     }
 }
 
+<div>
+    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="10" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+</div>
+
 @code{
     string? UserName { get; set; }
 
@@ -105,7 +109,7 @@
     
     private async Task LoadEvents()
     {
-        var result = await _EventService.GetEventsPagination();
+        var result = await _EventService.GetEventsPagination(_currentPageNumber, _pageSize, string.Empty);
 
         foreach (var eventItem in result.Events)
         {
@@ -120,6 +124,15 @@
         _events.AddRange(result.Events);
         
         StateHasChanged();
-        await Task.Delay(500);
+    }
+    
+    private int _currentPageNumber = 1;
+    private int _pageSize = 2;
+
+    private async Task OnPageChangedAsync(int pageNumber)
+    {
+        _currentPageNumber = pageNumber;
+
+        await ReloadEvents();
     }
 }
