@@ -24,7 +24,7 @@
 
 <div>Hello user</div>
 
-<button class="btn btn-primary" @onclick="LoadEvents">Click me</button>
+<button class="btn btn-primary" @onclick="ReloadEvents">Click me</button>
 <br/>
 
 @if (_count != 0)
@@ -37,7 +37,7 @@
                 <h5 class="card-title">Event Name: @item.Name</h5>
             </div>
             <div class="row" >
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card-body">
                         <p class="card-text">Created At: @item.CreatedAt</p>
                         <p class="card-text">Access: @item.Access</p>
@@ -46,9 +46,20 @@
                         <p class="card-text">Saved: @item.SavedCount</p>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card-body">
-                        <img src=@item.Image.ThumbnailHash class="rounded float-end" alt="Event Image" IsThumbnail="true" style="height: 200px">
+                        <img src=@item.Image.ThumbnailHash class="rounded float-md-none" alt="Event Image" IsThumbnail="true" style="height: 200px">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-body">
+                        <div class="card-text">
+                            <p class="card-text">Author</p>
+                            <p class="card-text">Name: @item.UserInfo.FirstName @item.UserInfo.LastName</p>
+                        </div>
+                        <div class="card-img-top">
+                            <img src=@item.UserInfo.Image.ThumbnailHash class="rounded" alt="Author Image" IsThumbnail="true" style="height: 100px">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -79,10 +90,18 @@
                 UserName = user.Identity.Name;
             }
         }
+
+        await LoadEvents();
     }
 
     private int _count = 0;
     private List<EventItemModelDTO> _events = new List<EventItemModelDTO>();
+
+    private async Task ReloadEvents()
+    {
+        _events.Clear();
+        await LoadEvents();
+    }
     
     private async Task LoadEvents()
     {
@@ -92,6 +111,9 @@
         {
             eventItem.Image.MainHash = ImagePathHelper.GetPath(_AppConfigurations.BackendUrl, eventItem.Image.MainHash);
             eventItem.Image.ThumbnailHash = ImagePathHelper.GetPath(_AppConfigurations.BackendUrl, eventItem.Image.ThumbnailHash);
+            
+            eventItem.UserInfo.Image.MainHash = ImagePathHelper.GetPath(_AppConfigurations.BackendUrl, eventItem.UserInfo.Image.MainHash);
+            eventItem.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(_AppConfigurations.BackendUrl, eventItem.UserInfo.Image.ThumbnailHash);
         }
         
         _count = result.Count;

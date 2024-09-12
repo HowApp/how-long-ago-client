@@ -22,7 +22,7 @@ public class EventService : IEventService
             {
                 { "page", "1" },
                 { "pageSize", "10" },
-                { "search", "s" }
+                // { "search", "" }
             };
             var url = QueryHelpers.AddQueryString("api/public/event/list-pagination", queryParams);
             
