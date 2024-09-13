@@ -1,7 +1,7 @@
 ﻿@page "/"
+@using System.Timers
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
-@using HowClient.Infrastructure.DTO.Public.Event
 @using HowClient.Infrastructure.Helpers
 @using HowClient.Services.Public.Event
 @using Microsoft.AspNetCore.Components.Authorization
@@ -29,7 +29,10 @@
 
 @if (_count != 0)
 {
-    <a>Total Count @_count</a>
+    <div>
+        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+    </div>
+
     @foreach (var item in _eventsToDisplay)
     {
         <div class="card">
@@ -44,6 +47,7 @@
                         <p class="card-text">Likes: @item.Likes</p>
                         <p class="card-text">Dislikes: @item.Dislikes</p>
                         <p class="card-text">Saved: @item.SavedCount</p>
+                        <p>Was @_timers[item.Id].ToString(@"dd\.hh\:mm\:ss") ago</p>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -80,8 +84,17 @@
     [CascadingParameter]
     Task<AuthenticationState>? AuthenticationState { get; set; }
 
-    private GetEventsPaginationPublicResponseDTO Events = new ();
+    private int _count = 0;
+    private List<EventItemModelDTO> _eventsToDisplay = new();
+    private Dictionary<int, List<EventItemModelDTO>> _loadedEvents = new();
+    
+    private int _currentPageNumber = 1;
+    private readonly int _pageSize = 5;
+    private int _totalPage = 1;
 
+    private Dictionary<int, TimeSpan> _timers = new ();
+    private Timer _timer;
+    
     protected override async Task OnInitializedAsync()
     {
         if (AuthenticationState is not null)
@@ -95,12 +108,24 @@
             }
         }
 
+        _timer = new Timer();
+        _timer.Interval = 1000; // Update every second
+        _timer.Elapsed += OnTimerElapsed;
+
+        _timer.Start();
+
         await OnPageChangedAsync(_currentPageNumber);
     }
 
-    private int _count = 0;
-    private List<EventItemModelDTO> _eventsToDisplay = new List<EventItemModelDTO>();
-    private Dictionary<int, List<EventItemModelDTO>> _loadedEvents = new();
+    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        foreach (var eventItem in _eventsToDisplay)
+        {
+            _timers[eventItem.Id] = DateTime.Now - eventItem.CreatedAt;
+        }
+
+        StateHasChanged();
+    }
 
     private async Task ReloadEvents()
     {
@@ -109,10 +134,6 @@
         _loadedEvents.Clear();
         await GetCurrentPage();
     }
-
-    private int _currentPageNumber = 1;
-    private readonly int _pageSize = 2;
-    private int _totalPage = 1;
 
     private async Task OnPageChangedAsync(int pageNumber)
     {
@@ -129,6 +150,10 @@
         }
         else
         {
+            if (_currentPageNumber > _totalPage)
+            {
+                _currentPageNumber = _totalPage;
+            }
             await LoadEvents();
             await GetCurrentPage();
         }
@@ -147,6 +172,8 @@
             
             eventItem.UserInfo.Image.MainHash = ImagePathHelper.GetPath(_AppConfigurations.BackendUrl, eventItem.UserInfo.Image.MainHash);
             eventItem.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(_AppConfigurations.BackendUrl, eventItem.UserInfo.Image.ThumbnailHash);
+
+            _timers.TryAdd(eventItem.Id, DateTime.Now - eventItem.CreatedAt);
         }
         
         _count = result.Count;
