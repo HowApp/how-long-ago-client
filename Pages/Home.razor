@@ -24,13 +24,13 @@
 
 <div>Hello user</div>
 
-<button class="btn btn-primary" @onclick="ReloadEvents">Click me</button>
+<button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
 <br/>
 
 @if (_count != 0)
 {
     <a>Total Count @_count</a>
-    @foreach (var item in _events)
+    @foreach (var item in _eventsToDisplay)
     {
         <div class="card">
             <div class="card-header">
@@ -71,7 +71,7 @@
 }
 
 <div>
-    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="10" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
 </div>
 
 @code{
@@ -95,16 +95,45 @@
             }
         }
 
-        await LoadEvents();
+        await OnPageChangedAsync(_currentPageNumber);
     }
 
     private int _count = 0;
-    private List<EventItemModelDTO> _events = new List<EventItemModelDTO>();
+    private List<EventItemModelDTO> _eventsToDisplay = new List<EventItemModelDTO>();
+    private Dictionary<int, List<EventItemModelDTO>> _loadedEvents = new();
 
     private async Task ReloadEvents()
     {
-        _events.Clear();
-        await LoadEvents();
+        _currentPageNumber = 1;
+        _eventsToDisplay.Clear();
+        _loadedEvents.Clear();
+        await GetCurrentPage();
+    }
+
+    private int _currentPageNumber = 1;
+    private readonly int _pageSize = 2;
+    private int _totalPage = 1;
+
+    private async Task OnPageChangedAsync(int pageNumber)
+    {
+        _currentPageNumber = pageNumber;
+
+        await GetCurrentPage();
+    }
+
+    private async Task GetCurrentPage()
+    {
+        if (_loadedEvents.TryGetValue(_currentPageNumber, out var events))
+        {
+            _eventsToDisplay = events;
+        }
+        else
+        {
+            await LoadEvents();
+            await GetCurrentPage();
+        }
+        
+        StateHasChanged();
     }
     
     private async Task LoadEvents()
@@ -121,18 +150,10 @@
         }
         
         _count = result.Count;
-        _events.AddRange(result.Events);
+        _totalPage = (int)Math.Ceiling((double)_count / _pageSize);
+
+        _loadedEvents.TryAdd(_currentPageNumber, result.Events);
         
         StateHasChanged();
-    }
-    
-    private int _currentPageNumber = 1;
-    private int _pageSize = 2;
-
-    private async Task OnPageChangedAsync(int pageNumber)
-    {
-        _currentPageNumber = pageNumber;
-
-        await ReloadEvents();
     }
 }
