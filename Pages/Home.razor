@@ -119,7 +119,7 @@
 
     private void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
-        foreach (var eventItem in _eventsToDisplay)
+        foreach (var eventItem in _eventsToDisplay.Where(eventItem => _timers.ContainsKey(eventItem.Id)))
         {
             _timers[eventItem.Id] = DateTime.Now - eventItem.CreatedAt;
         }
@@ -150,7 +150,7 @@
         }
         else
         {
-            if (_currentPageNumber > _totalPage)
+            if (_currentPageNumber > _totalPage || _currentPageNumber < 1)
             {
                 _currentPageNumber = _totalPage;
             }
