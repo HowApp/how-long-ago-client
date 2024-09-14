@@ -4,5 +4,5 @@ using Infrastructure.DTO.Public.Event;
 
 public interface IEventService
 {
-    Task<GetEventsPaginationPublicResponseDTO> GetEventsPagination(int pageNumber, int pageSize, string search);
+    Task<GetEventsPaginationPublicResponseDTO> GetEventsPagination(GetEventsPaginationPublicRequestDTO request);
 }
