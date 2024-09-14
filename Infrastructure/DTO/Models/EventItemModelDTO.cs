@@ -1,8 +1,9 @@
 namespace HowClient.Infrastructure.DTO.Models;
 
 using Enums;
+using Internal;
 
-public class EventItemModelDTO
+public class EventItemModelDTO : EventItemModelInternal
 {
     public int Id { get; set; }
     public string Name { get; set; }

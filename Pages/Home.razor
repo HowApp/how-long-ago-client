@@ -47,7 +47,7 @@
                         <p class="card-text">Likes: @item.Likes</p>
                         <p class="card-text">Dislikes: @item.Dislikes</p>
                         <p class="card-text">Saved: @item.SavedCount</p>
-                        <p>Was @_timers[item.Id].ToString(@"dd\.hh\:mm\:ss") ago</p>
+                        <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -92,7 +92,6 @@
     private readonly int _pageSize = 5;
     private int _totalPage = 1;
 
-    private Dictionary<int, TimeSpan> _timers = new ();
     private Timer _timer;
     
     protected override async Task OnInitializedAsync()
@@ -119,9 +118,9 @@
 
     private void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
-        foreach (var eventItem in _eventsToDisplay.Where(eventItem => _timers.ContainsKey(eventItem.Id)))
+        foreach (var eventItem in _eventsToDisplay)
         {
-            _timers[eventItem.Id] = DateTime.Now - eventItem.CreatedAt;
+            eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
         }
 
         StateHasChanged();
@@ -173,7 +172,7 @@
             eventItem.UserInfo.Image.MainHash = ImagePathHelper.GetPath(_AppConfigurations.BackendUrl, eventItem.UserInfo.Image.MainHash);
             eventItem.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(_AppConfigurations.BackendUrl, eventItem.UserInfo.Image.ThumbnailHash);
 
-            _timers.TryAdd(eventItem.Id, DateTime.Now - eventItem.CreatedAt);
+            eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
         }
         
         _count = result.Count;
