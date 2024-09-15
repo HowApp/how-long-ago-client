@@ -10,6 +10,47 @@
 
 <h3>Event</h3>
 
+@if (_count > 0)
+{
+    <div>
+        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+    </div>
+    
+    foreach (var record in _recordsToDisplay)
+    {
+        <div class="card">
+            <div class="row" >
+                <div class="col-md-4">
+                    <div class="card-body">
+                        <p class="card-text">Created At: @record.CreatedAt</p>
+                        <p class="card-text">Description: @record.Description</p>
+                        <p class="card-text">Likes: @record.Likes</p>
+                        <p class="card-text">Dislikes: @record.Dislikes</p>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        @if (record.Images.Any())
+                        {
+                            <Carousel>
+                                <CarouselItem Active="true">
+                                    <img src=@record.Images.First().ThumbnailHash class="rounded float-md-none" alt="Record Image" IsThumbnail="true" style="height: 200px">
+                                </CarouselItem>
+                            
+                                @for (int i = 1; i < record.Images.Count; i++ )
+                                {
+                                    <CarouselItem>
+                                        <img src=@record.Images[i].ThumbnailHash class="rounded float-md-none" alt="Record Image" IsThumbnail="true" style="height: 200px">
+                                    </CarouselItem>
+                                }
+                            </Carousel>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
 @code {
     [Parameter]
     public int EventId { get; set; }

@@ -24,7 +24,7 @@ public class RecordService : IRecordService
                 { "Size", request.Size.ToString() }
             };
 
-            var url = QueryHelpers.AddQueryString($"api/public/event/{eventId}/recordlist-pagination", queryParams);
+            var url = QueryHelpers.AddQueryString($"api/public/event/{eventId}/record/list-pagination", queryParams);
             
             var response = await _anonymousClientApi.GetAsync<ResultResponse<GetRecordsPaginationResponseDTO>>(url);
             

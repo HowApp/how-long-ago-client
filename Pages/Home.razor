@@ -29,7 +29,7 @@
 <button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
 <br/>
 
-@if (_count != 0)
+@if (_count > 0)
 {
     <div>
         <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
