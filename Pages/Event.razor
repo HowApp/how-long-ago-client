@@ -30,21 +30,25 @@
                 </div>
                 <div class="col-md-8">
                     <div class="card-body">
-                        @if (record.Images.Any())
-                        {
-                            <Carousel>
+                        <Carousel>
+                            @if (!record.Images.Any())
+                            {
                                 <CarouselItem Active="true">
-                                    <img src=@record.Images.First().ThumbnailHash class="rounded float-md-none" alt="Record Image" IsThumbnail="true" style="height: 200px">
+                                    <img src=@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, string.Empty) class="d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 200px">
                                 </CarouselItem>
-                            
-                                @for (int i = 1; i < record.Images.Count; i++ )
+                            }
+                            else
+                            {
+                                for (int i = 0; i < record.Images.Count; i++)
                                 {
-                                    <CarouselItem>
-                                        <img src=@record.Images[i].ThumbnailHash class="rounded float-md-none" alt="Record Image" IsThumbnail="true" style="height: 200px">
+                                    var recordImageThumbnail = record.Images[i].ThumbnailHash;
+                                    
+                                    <CarouselItem Active="@(i == 0)">
+                                        <img src=@recordImageThumbnail class="d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 250px; margin: 0 auto;">
                                     </CarouselItem>
                                 }
-                            </Carousel>
-                        }
+                            }
+                        </Carousel>
                     </div>
                 </div>
             </div>
