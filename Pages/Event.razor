@@ -13,7 +13,7 @@
 
 <h3>Event</h3>
 
-@if (_count > 0)
+@if (_event is not null)
 {
     <div class="card">
         <div class="card-header">
@@ -48,7 +48,12 @@
             </div>
         </div>
     </div>
-    
+}
+
+
+
+@if (_count > 0)
+{
     <div>
         <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
     </div>
@@ -66,12 +71,12 @@
                     </div>
                 </div>
                 <div class="col-md-8">
-                    <div class="card-body">
+                    <div class="card-body"  style="background-color: #708090">
                         <Carousel>
                             @if (!record.Images.Any())
                             {
                                 <CarouselItem Active="true">
-                                    <img src=@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, string.Empty) class="d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 200px">
+                                    <img src=@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, string.Empty) class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 200px">
                                 </CarouselItem>
                             }
                             else
@@ -81,7 +86,7 @@
                                     var recordImageThumbnail = record.Images[i].ThumbnailHash;
                                     
                                     <CarouselItem Active="@(i == 0)">
-                                        <img src=@recordImageThumbnail class="d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 250px; margin: 0 auto;">
+                                        <img src=@recordImageThumbnail class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 250px; margin: 0 auto;">
                                     </CarouselItem>
                                 }
                             }
@@ -91,6 +96,10 @@
             </div>
         </div>
     }
+    
+    <div>
+        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+    </div>
 }
 @code {
     [Parameter]
