@@ -41,4 +41,22 @@ public class EventService : IEventService
         
         return new GetEventsPaginationPublicResponseDTO();
     }
+
+    public async Task<GetEventByIdResponseDTO> GetEventById(int eventId)
+    {
+        try
+        {
+            var url = $"api/public/event/{eventId}/details";
+            
+            var response = await _anonymousClientApi.GetAsync<ResultResponse<GetEventByIdResponseDTO>>(url);
+            
+            return response.Data;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+        }
+
+        return new GetEventByIdResponseDTO();
+    }
 }

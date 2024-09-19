@@ -1,17 +1,54 @@
 @page "/event/{EventId:int:min(1)}/record"
+@using System.Timers
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
 @using HowClient.Infrastructure.DTO.Public.Record
 @using HowClient.Infrastructure.Helpers
+@using HowClient.Services.Public.Event
 @using HowClient.Services.Public.Record
 
 @inject IRecordService RecordService;
+@inject IEventService EventService;
 @inject AppConfigurations AppConfigurations
 
 <h3>Event</h3>
 
 @if (_count > 0)
 {
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Event Name: @_event.Name</h5>
+        </div>
+        <div class="row" >
+            <div class="col-md-4">
+                <div class="card-body">
+                    <p class="card-text">Created At: @_event.CreatedAt</p>
+                    <p class="card-text">Access: @_event.Access</p>
+                    <p class="card-text">Likes: @_event.Likes</p>
+                    <p class="card-text">Dislikes: @_event.Dislikes</p>
+                    <p class="card-text">Saved: @_event.SavedCount</p>
+                    <p>Was @_event.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-body">
+                    <img src=@_event.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-body">
+                    <div class="card-text">
+                        <p class="card-text">Author</p>
+                        <p class="card-text">Name: @_event.UserInfo.FirstName @_event.UserInfo.LastName</p>
+                    </div>
+                    <div class="card-img-top">
+                        <img src=@_event.UserInfo.Image.ThumbnailHash class="rounded float-md-none" alt="Author Image" IsThumbnail="true" style="height: 100px">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div>
         <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
     </div>
@@ -60,22 +97,39 @@
     public int EventId { get; set; }
     
     private int _count = 0;
+    private EventItemModelDTO _event;
     private List<RecordItemModelDTO> _recordsToDisplay = new();
     private Dictionary<int, List<RecordItemModelDTO>> _loadedRecords = new();
     
     private int _currentPageNumber = 1;
     private readonly int _pageSize = 5;
     private int _totalPage = 1;
+    
+    private Timer _timer;
 
     protected override async Task OnInitializedAsync()
     {
         await OnPageChangedAsync(_currentPageNumber);
+        
+        _timer = new Timer();
+        _timer.Interval = 1000; // Update every second
+        _timer.Elapsed += OnTimerElapsed;
+
+        _timer.Start();
+    }
+    
+    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        _event.Duration = DateTime.Now - _event.CreatedAt;
+
+        StateHasChanged();
     }
     
     private async Task OnPageChangedAsync(int pageNumber)
     {
         _currentPageNumber = pageNumber;
 
+        await LoadEventDetail();
         await GetCurrentPage();
     }
     
@@ -122,7 +176,18 @@
         _totalPage = (int)Math.Ceiling((double)_count / _pageSize);
 
         _loadedRecords.TryAdd(_currentPageNumber, result.Records);
-        
-        StateHasChanged();
+    }
+
+    private async Task LoadEventDetail()
+    {
+        _event = await EventService.GetEventById(EventId);
+
+        _event.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.MainHash);
+        _event.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.ThumbnailHash);
+
+        _event.UserInfo.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.UserInfo.Image.MainHash);
+        _event.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.UserInfo.Image.ThumbnailHash);
+
+        _event.Duration = DateTime.Now - _event.CreatedAt;
     }
 }
