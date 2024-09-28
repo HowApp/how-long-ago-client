@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Options;
 using Services.Auth;
 using Services.CookieHandler;
+using Services.InternalNotification;
 using Services.Private.Dashboard;
 using Services.Provider;
 using Services.Public.Event;
@@ -27,6 +28,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<CustomStateProvider>();
         services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredService<CustomStateProvider>());
         services.AddScoped<IAuthServices, AuthServices>();
+        services.AddSingleton<InternalNotificationService>();
 
         //Public
         services.AddScoped<IEventPublicService, EventPublicService>();

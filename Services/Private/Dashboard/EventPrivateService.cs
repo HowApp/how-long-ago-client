@@ -3,16 +3,21 @@ namespace HowClient.Services.Private.Dashboard;
 using ClientAPI;
 using Infrastructure.DTO.Private.Dashboard.Event;
 using Infrastructure.DTO.Public.Event;
+using InternalNotification;
 using Microsoft.AspNetCore.WebUtilities;
 using ResultType;
 
 public class EventPrivateService : IEventPrivateService
 {
     private readonly AuthorizedClientAPI _clientApi;
+    private readonly InternalNotificationService _notificationService;
 
-    public EventPrivateService(AuthorizedClientAPI clientApi)
+    public EventPrivateService(
+        AuthorizedClientAPI clientApi,
+        InternalNotificationService notificationService)
     {
         _clientApi = clientApi;
+        _notificationService = notificationService;
     }
 
     public async Task<GetEventsPaginationPrivateResponseDTO> GetEventsPagination(GetEventsPaginationPrivateRequestDTO request)
@@ -32,6 +37,11 @@ public class EventPrivateService : IEventPrivateService
             var url = QueryHelpers.AddQueryString("api/dashboard/event/list-pagination/own", queryParams);
             
             var response = await _clientApi.GetAsync<ResultResponse<GetEventsPaginationPrivateResponseDTO>>(url);
+
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+            }
             
             return response.Data;
         }

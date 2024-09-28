@@ -6,59 +6,62 @@
 @using HowClient.Infrastructure.DTO.Private.Dashboard.Event
 @using HowClient.Infrastructure.Helpers
 @using HowClient.Services.Private.Dashboard
+@using HowClient.Services.InternalNotification
+@using Components
 
 @inject IEventPrivateService EventPrivateService
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
+@inject InternalNotificationService InternalNotificationService
 
 <button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
 <br/>
 
 @if (_count > 0)
 {
-<div>
-    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
-</div>
+    <div>
+        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+    </div>
 
-@foreach (var item in _eventsToDisplay)
-{
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title">Event Name: @item.Name</h5>
-    </div>
-    <div class="row" >
-        <div class="col-md-4">
-            <div class="card-body">
-                <p class="card-text">Created At: @item.CreatedAt</p>
-                <p class="card-text">Access: @item.Access</p>
-                <p class="card-text">Likes: @item.Likes</p>
-                <p class="card-text">Dislikes: @item.Dislikes</p>
-                <p class="card-text">Saved: @item.SavedCount</p>
-                <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
+    @foreach (var item in _eventsToDisplay)
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Event Name: @item.Name</h5>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card-body">
-                <img src=@item.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card-body">
-                <div class="card-text">
-                    <p class="card-text">Author</p>
-                    <p class="card-text">Name: @item.UserInfo.FirstName @item.UserInfo.LastName</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card-body">
+                        <p class="card-text">Created At: @item.CreatedAt</p>
+                        <p class="card-text">Access: @item.Access</p>
+                        <p class="card-text">Likes: @item.Likes</p>
+                        <p class="card-text">Dislikes: @item.Dislikes</p>
+                        <p class="card-text">Saved: @item.SavedCount</p>
+                        <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
+                    </div>
                 </div>
-                <div class="card-img-top">
-                    <img src=@item.UserInfo.Image.ThumbnailHash class="rounded float-md-none" alt="Author Image" IsThumbnail="true" style="height: 100px">
+                <div class="col-md-4">
+                    <div class="card-body">
+                        <img src=@item.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-body">
+                        <div class="card-text">
+                            <p class="card-text">Author</p>
+                            <p class="card-text">Name: @item.UserInfo.FirstName @item.UserInfo.LastName</p>
+                        </div>
+                        <div class="card-img-top">
+                            <img src=@item.UserInfo.Image.ThumbnailHash class="rounded float-md-none" alt="Author Image" IsThumbnail="true" style="height: 100px">
+                        </div>
+                    </div>
                 </div>
             </div>
+            @* <div class="card-footer"> *@
+            @*     <button class="btn btn-primary" onclick="@(() => NavigateToEventInfo(item.Id))">View Details</button> *@
+            @* </div> *@
         </div>
-    </div>
-    @* <div class="card-footer"> *@
-    @*     <button class="btn btn-primary" onclick="@(() => NavigateToEventInfo(item.Id))">View Details</button> *@
-    @* </div> *@
-</div>
-}
+    }
 }
 
 <div>
@@ -68,6 +71,8 @@
 @code {
     [CascadingParameter]
     Task<AuthenticationState>? AuthenticationState { get; set; }
+    [CascadingParameter]
+    protected IErrorComponent ErrorComponent { get; set; }
     
     private int _count = 0;
     private List<EventItemModelDTO> _eventsToDisplay = new();
@@ -78,6 +83,8 @@
     private int _totalPage = 1;
 
     private Timer _timer;
+    
+    private string errorMessage;
     
     protected override async Task OnInitializedAsync()
     {
@@ -99,6 +106,7 @@
         _timer.Elapsed += OnTimerElapsed;
 
         _timer.Start();
+        InternalNotificationService.OnError += HandleError;
         
         await OnPageChangedAsync(_currentPageNumber);
     }
@@ -174,5 +182,21 @@
         _loadedEvents.TryAdd(_currentPageNumber, result.Events);
         
         StateHasChanged();
+    }
+    
+    private void HandleError(string message)
+    {
+        // Set the error message from the NotificationService
+        // errorMessage = message;
+        // StateHasChanged(); // Re-render the component to show the error
+        
+        ErrorComponent.ShowError("Error!", message);
+    }
+    
+    
+    public void Dispose()
+    {
+        // Unsubscribe from the event when the component is disposed
+        InternalNotificationService.OnError -= HandleError;
     }
 }

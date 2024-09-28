@@ -1,8 +1,11 @@
 ﻿@using HowClient.Services.Provider
 @using Microsoft.AspNetCore.Components.Authorization
+@using Components
+
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject CustomStateProvider AuthStateProvider
+@implements IErrorComponent
 
 <div class="bb-page">
 
@@ -25,7 +28,20 @@
         </div>
 
         <article class="content px-4">
-            <div class="py-2">@Body</div>
+
+            @if (isErrorActive)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="HideError">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h3>@title</h3>
+                    <p>@message</p>
+                </div>
+            }
+            <CascadingValue Value="this" Name="ErrorComponent">
+                <div class="py-2">@Body</div>
+            </CascadingValue>
         </article>
     </main>
 
@@ -34,6 +50,10 @@
 @code {
     Sidebar sidebar;
     IEnumerable<NavItem> navItems;
+    
+    bool isErrorActive;
+    string title;
+    string message;
 
     private async Task<SidebarDataProviderResult> SidebarDataProvider(SidebarDataProviderRequest request)
     {
@@ -65,5 +85,18 @@
     async Task LoginClick()
     {
         NavigationManager.NavigateTo("/login");
+    }
+
+    public void ShowError(string title, string message)
+    {
+        isErrorActive = true;
+        title = title;
+        message = message;
+        StateHasChanged();
+    }
+
+    private void HideError()
+    {
+        isErrorActive = false;
     }
 }
