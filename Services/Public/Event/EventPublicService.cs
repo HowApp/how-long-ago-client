@@ -32,6 +32,11 @@ public class EventPublicService : IEventPublicService
             
             var response = await _clientApi.GetAsync<ResultResponse<GetEventsPaginationPublicResponseDTO>>(url);
             
+            if (response.Failed)
+            {
+                return new GetEventsPaginationPublicResponseDTO();
+            }
+            
             return response.Data;
         }
         catch (HttpRequestException e)

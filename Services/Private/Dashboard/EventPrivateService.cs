@@ -41,6 +41,7 @@ public class EventPrivateService : IEventPrivateService
             if (response.Failed)
             {
                 _notificationService.NotifyError(response.ToString());
+                return new GetEventsPaginationPrivateResponseDTO();
             }
             
             return response.Data;

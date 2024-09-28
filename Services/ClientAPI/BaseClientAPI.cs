@@ -46,8 +46,6 @@ public abstract class BaseClientAPI
             {
                 // throw new Exception(string.Join(" ", resultResponse.Error.Values.ToList()));
                 Console.WriteLine(string.Join(" ", resultResponse.Error.Values.ToList()));
-
-                return default;
             }
         }
         

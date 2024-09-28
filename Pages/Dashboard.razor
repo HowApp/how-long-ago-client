@@ -71,7 +71,8 @@
 @code {
     [CascadingParameter]
     Task<AuthenticationState>? AuthenticationState { get; set; }
-    [CascadingParameter]
+    
+    [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
     
     private int _count = 0;
@@ -187,7 +188,7 @@
     private void HandleError(string message)
     {
         // Set the error message from the NotificationService
-        // errorMessage = message;
+        errorMessage = message;
         // StateHasChanged(); // Re-render the component to show the error
         
         ErrorComponent.ShowError("Error!", message);
