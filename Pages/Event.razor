@@ -7,8 +7,8 @@
 @using HowClient.Services.Public.Event
 @using HowClient.Services.Public.Record
 
-@inject IRecordService RecordService;
-@inject IEventService EventService;
+@inject IRecordPublicService RecordPublicService;
+@inject IEventPublicService EventPublicService;
 @inject AppConfigurations AppConfigurations
 
 <h3>Event</h3>
@@ -163,7 +163,7 @@
     
     private async Task LoadRecords()
     {
-        var result = await RecordService.GetRecordsPagination(
+        var result = await RecordPublicService.GetRecordsPagination(
             EventId,
             new GetRecordsPaginationRequestDTO
             {
@@ -189,7 +189,7 @@
 
     private async Task LoadEventDetail()
     {
-        _event = await EventService.GetEventById(EventId);
+        _event = await EventPublicService.GetEventById(EventId);
 
         _event.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.MainHash);
         _event.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.ThumbnailHash);

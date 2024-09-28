@@ -5,11 +5,11 @@ using Infrastructure.DTO.Public.Record;
 using Microsoft.AspNetCore.WebUtilities;
 using ResultType;
 
-public class RecordService : IRecordService
+public class RecordPublicService : IRecordPublicService
 {
     private readonly AnonymousClientAPI _anonymousClientApi;
 
-    public RecordService(AnonymousClientAPI anonymousClientApi)
+    public RecordPublicService(AnonymousClientAPI anonymousClientApi)
     {
         _anonymousClientApi = anonymousClientApi;
     }

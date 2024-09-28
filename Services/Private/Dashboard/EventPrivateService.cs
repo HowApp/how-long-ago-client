@@ -1,20 +1,21 @@
-namespace HowClient.Services.Public.Event;
+namespace HowClient.Services.Private.Dashboard;
 
 using ClientAPI;
+using Infrastructure.DTO.Private.Dashboard.Event;
 using Infrastructure.DTO.Public.Event;
 using Microsoft.AspNetCore.WebUtilities;
 using ResultType;
 
-public class EventService : IEventService
+public class EventPrivateService : IEventPrivateService
 {
-    private readonly AnonymousClientAPI _anonymousClientApi; // TODO check for authorized client
+    private readonly AuthorizedClientAPI _clientApi;
 
-    public EventService(AnonymousClientAPI anonymousClientApi)
+    public EventPrivateService(AuthorizedClientAPI clientApi)
     {
-        _anonymousClientApi = anonymousClientApi;
+        _clientApi = clientApi;
     }
 
-    public async Task<GetEventsPaginationPublicResponseDTO> GetEventsPagination(GetEventsPaginationPublicRequestDTO request)
+    public async Task<GetEventsPaginationPrivateResponseDTO> GetEventsPagination(GetEventsPaginationPrivateRequestDTO request)
     {
         try
         {
@@ -28,9 +29,9 @@ public class EventService : IEventService
                 queryParams.Add("search", request.Search);
             }
             
-            var url = QueryHelpers.AddQueryString("api/public/event/list-pagination", queryParams);
+            var url = QueryHelpers.AddQueryString("api/dashboard/event/list-pagination/own", queryParams);
             
-            var response = await _anonymousClientApi.GetAsync<ResultResponse<GetEventsPaginationPublicResponseDTO>>(url);
+            var response = await _clientApi.GetAsync<ResultResponse<GetEventsPaginationPrivateResponseDTO>>(url);
             
             return response.Data;
         }
@@ -39,7 +40,7 @@ public class EventService : IEventService
             Console.WriteLine($"Request failed: {e}");
         }
         
-        return new GetEventsPaginationPublicResponseDTO();
+        return new GetEventsPaginationPrivateResponseDTO();
     }
 
     public async Task<GetEventByIdResponseDTO> GetEventById(int eventId)
@@ -48,7 +49,7 @@ public class EventService : IEventService
         {
             var url = $"api/public/event/{eventId}/details";
             
-            var response = await _anonymousClientApi.GetAsync<ResultResponse<GetEventByIdResponseDTO>>(url);
+            var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdResponseDTO>>(url);
             
             return response.Data;
         }

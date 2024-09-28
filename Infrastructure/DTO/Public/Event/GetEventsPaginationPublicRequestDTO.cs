@@ -4,5 +4,5 @@ using Common.DTO;
 
 public sealed class GetEventsPaginationPublicRequestDTO : PaginationDTO
 {
-    public string Search { get; set; }
+    public string Search { get; set; } = string.Empty;
 }

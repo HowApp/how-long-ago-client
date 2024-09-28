@@ -1,11 +1,178 @@
 @page "/dashboard"
-@using HowClient.Services.Public.Event
+@using HowClient.Infrastructure.DTO.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Timers
+@using HowClient.Configuration
+@using HowClient.Infrastructure.DTO.Private.Dashboard.Event
+@using HowClient.Infrastructure.Helpers
+@using HowClient.Services.Private.Dashboard
 
-@inject IEventService _EventService
+@inject IEventPrivateService EventPrivateService
+@inject AppConfigurations AppConfigurations
+@inject NavigationManager NavigationManager
 
-<h3>Dashboard</h3>
-<h2>Soon</h2>
+<button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
+<br/>
 
+@if (_count > 0)
+{
+<div>
+    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+</div>
+
+@foreach (var item in _eventsToDisplay)
+{
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">Event Name: @item.Name</h5>
+    </div>
+    <div class="row" >
+        <div class="col-md-4">
+            <div class="card-body">
+                <p class="card-text">Created At: @item.CreatedAt</p>
+                <p class="card-text">Access: @item.Access</p>
+                <p class="card-text">Likes: @item.Likes</p>
+                <p class="card-text">Dislikes: @item.Dislikes</p>
+                <p class="card-text">Saved: @item.SavedCount</p>
+                <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-body">
+                <img src=@item.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-body">
+                <div class="card-text">
+                    <p class="card-text">Author</p>
+                    <p class="card-text">Name: @item.UserInfo.FirstName @item.UserInfo.LastName</p>
+                </div>
+                <div class="card-img-top">
+                    <img src=@item.UserInfo.Image.ThumbnailHash class="rounded float-md-none" alt="Author Image" IsThumbnail="true" style="height: 100px">
+                </div>
+            </div>
+        </div>
+    </div>
+    @* <div class="card-footer"> *@
+    @*     <button class="btn btn-primary" onclick="@(() => NavigateToEventInfo(item.Id))">View Details</button> *@
+    @* </div> *@
+</div>
+}
+}
+
+<div>
+    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+</div>
 
 @code {
+    [CascadingParameter]
+    Task<AuthenticationState>? AuthenticationState { get; set; }
+    
+    private int _count = 0;
+    private List<EventItemModelDTO> _eventsToDisplay = new();
+    private Dictionary<int, List<EventItemModelDTO>> _loadedEvents = new();
+    
+    private int _currentPageNumber = 1;
+    private readonly int _pageSize = 5;
+    private int _totalPage = 1;
+
+    private Timer _timer;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (AuthenticationState is not null)
+        {
+            var authState = await AuthenticationState;
+            var user = authState?.User;
+
+            if (!user.Identity.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+        }
+        
+        _timer = new Timer();
+        _timer.Interval = 1000; // Update every second
+        _timer.Elapsed += OnTimerElapsed;
+
+        _timer.Start();
+        
+        await OnPageChangedAsync(_currentPageNumber);
+    }
+    
+    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        foreach (var eventItem in _eventsToDisplay)
+        {
+            eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
+        }
+
+        StateHasChanged();
+    }
+    
+    private async Task ReloadEvents()
+    {
+        _currentPageNumber = 1;
+        _eventsToDisplay.Clear();
+        _loadedEvents.Clear();
+        await GetCurrentPage();
+    }
+    
+    private async Task OnPageChangedAsync(int pageNumber)
+    {
+        _currentPageNumber = pageNumber;
+
+        await GetCurrentPage();
+    }
+    
+    private async Task GetCurrentPage()
+    {
+        if (_loadedEvents.TryGetValue(_currentPageNumber, out var events))
+        {
+            _eventsToDisplay = events;
+        }
+        else
+        {
+            if (_currentPageNumber > _totalPage || _currentPageNumber < 1)
+            {
+                _currentPageNumber = _totalPage;
+            }
+            await LoadEvents();
+            await GetCurrentPage();
+        }
+        
+        StateHasChanged();
+    }
+    
+    private async Task LoadEvents()
+    {
+        var result = await EventPrivateService.GetEventsPagination(
+            new GetEventsPaginationPrivateRequestDTO
+            {
+                Page = _currentPageNumber,
+                Size = _pageSize,
+                Search = string.Empty
+            });
+
+        foreach (var eventItem in result.Events)
+        {
+            eventItem.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.Image.MainHash);
+            eventItem.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.Image.ThumbnailHash);
+            
+            eventItem.UserInfo.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.MainHash);
+            eventItem.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.ThumbnailHash);
+
+            eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
+        }
+        
+        _count = result.Count;
+        _totalPage = (int)Math.Ceiling((double)_count / _pageSize);
+
+        _loadedEvents.TryAdd(_currentPageNumber, result.Events);
+        
+        StateHasChanged();
+    }
 }

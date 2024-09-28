@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Options;
 using Services.Auth;
 using Services.CookieHandler;
+using Services.Private.Dashboard;
 using Services.Provider;
 using Services.Public.Event;
 using Services.Public.Record;
@@ -26,8 +27,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<CustomStateProvider>();
         services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredService<CustomStateProvider>());
         services.AddScoped<IAuthServices, AuthServices>();
-        services.AddScoped<IEventService, EventService>();
-        services.AddScoped<IRecordService, RecordService>();
+
+        //Public
+        services.AddScoped<IEventPublicService, EventPublicService>();
+        services.AddScoped<IRecordPublicService, RecordPublicService>();
+
+        // Private
+        services.AddScoped<IEventPrivateService, EventPrivateService>();
         
         return services;
     }

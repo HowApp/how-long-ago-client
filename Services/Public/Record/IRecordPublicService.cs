@@ -2,7 +2,7 @@ namespace HowClient.Services.Public.Record;
 
 using Infrastructure.DTO.Public.Record;
 
-public interface IRecordService
+public interface IRecordPublicService
 {
     Task<GetRecordsPaginationResponseDTO> GetRecordsPagination(int eventId, GetRecordsPaginationRequestDTO request);
 }

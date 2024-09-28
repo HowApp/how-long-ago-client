@@ -7,7 +7,7 @@
 @using HowClient.Services.Public.Event
 @using Microsoft.AspNetCore.Components.Authorization
 
-@inject IEventService EventService
+@inject IEventPublicService EventPublicService
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
 
@@ -164,7 +164,7 @@
     
     private async Task LoadEvents()
     {
-        var result = await EventService.GetEventsPagination(
+        var result = await EventPublicService.GetEventsPagination(
             new GetEventsPaginationPublicRequestDTO
             {
                 Page = _currentPageNumber,
