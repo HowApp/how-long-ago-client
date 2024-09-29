@@ -1,0 +1,27 @@
+@if(ErrorsToDisplay.Any())
+{
+    foreach (var item in ErrorsToDisplay)
+    {
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="flex-grow-1">
+                <h5 class="mb-1">@item.title</h5>
+                <p class="mb-0">@item.message</p>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm ms-2" aria-label="Close" @onclick="() => TriggerCallback(item.id)">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public IEnumerable<(long id, string title, string message)> ErrorsToDisplay { get; set; }
+    [Parameter] 
+    public EventCallback<long> OnClickCallback { get; set; }
+    
+    private async Task TriggerCallback(long id)
+    {
+        await OnClickCallback.InvokeAsync(id);
+    }
+}

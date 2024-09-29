@@ -8,11 +8,12 @@
 @implements IErrorComponent
 
 <div class="bb-page">
-
-    <Sidebar @ref="sidebar"
+    <Sidebar @ref="_sidebar"
              IconName="IconName.BootstrapFill"
              Title="Blazor Bootstrap"
              DataProvider="SidebarDataProvider" />
+
+    <Offcanvas @ref="_offcanvas" />
 
     <main>
         <div class="bb-top-row px-4 d-flex justify-content-end">
@@ -25,20 +26,12 @@
                     <button type="button" class="btn btn-link ml-md-auto" @onclick="@LoginClick">Login</button>
                 </NotAuthorized>
             </AuthorizeView>
+            <button type="button" class="btn btn-link ml-md-auto" @onclick="@ShowOffCanvasContent">
+                Notifications <Badge Color="BadgeColor.Danger"><Icon Name="IconName.Bicycle" /> @_errors.Count</Badge>
+            </button>
         </div>
 
         <article class="content px-4">
-
-            @if (_isErrorActive)
-            {
-                <div class="alert alert-danger" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="HideError">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h3>@_title</h3>
-                    <p>@_message</p>
-                </div>
-            }
             <CascadingValue Value="this" Name="ErrorComponent">
                 <div class="py-2">@Body</div>
             </CascadingValue>
@@ -48,18 +41,18 @@
 </div>
 
 @code {
-    Sidebar sidebar;
+    private Sidebar _sidebar;
     IEnumerable<NavItem> navItems;
     
-    private bool _isErrorActive;
-    private string _title;
-    private string _message;
+    private Offcanvas _offcanvas;
+    
+    private Dictionary<long, (string title, string message)> _errors = new();
 
     private async Task<SidebarDataProviderResult> SidebarDataProvider(SidebarDataProviderRequest request)
     {
         if (navItems is null)
             navItems = GetNavItems();
-
+        
         return await Task.FromResult(request.ApplyTo(navItems));
     }
 
@@ -89,14 +82,21 @@
 
     public void ShowError(string title, string message)
     {
-        _isErrorActive = true;
-        _title = title;
-        _message = message;
+        _errors.Add(DateTime.UtcNow.ToBinary(), (title, message));
         StateHasChanged();
     }
 
-    private void HideError()
+    private async Task ShowOffCanvasContent()
     {
-        _isErrorActive = false;
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("ErrorsToDisplay", _errors.Select(x => (x.Key, x.Value.title, x.Value.message)));
+        parameters.Add("OnClickCallback", EventCallback.Factory.Create<long>(this, RemoveErrorItem));
+
+        await _offcanvas.ShowAsync<ErrorItemOffCanvasComponent>(title: "Errors List", parameters: parameters);
+    }
+
+    private void RemoveErrorItem(long errorId)
+    {
+        _errors.Remove(errorId);
     }
 }
