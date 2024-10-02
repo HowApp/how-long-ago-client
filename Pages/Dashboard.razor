@@ -7,6 +7,7 @@
 @using HowClient.Infrastructure.Helpers
 @using HowClient.Services.Private.Dashboard
 @using HowClient.Services.InternalNotification
+@using HowClient.Infrastructure.Enums
 @using Components
 
 @inject IEventPrivateService EventPrivateService
@@ -14,12 +15,32 @@
 @inject NavigationManager NavigationManager
 @inject InternalNotificationService InternalNotificationService
 
-<button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
+
 <br/>
+<div class="d-flex gap-2 mb-8">
+    <Dropdown Color="DropdownColor.Dark" Direction="DropdownDirection.DropdownCentered">
+        <DropdownToggleButton>@Status</DropdownToggleButton>
+        <DropdownMenu>
+            <DropdownItem @onclick="() => Status = EventStatus.Inactive" Type="DropdownItemType.Link">Inactive</DropdownItem>
+            <DropdownItem @onclick="() => Status = EventStatus.Active" Type="DropdownItemType.Link">Active</DropdownItem>
+        </DropdownMenu>
+    </Dropdown>
+    <Dropdown Color="DropdownColor.Dark">
+        <DropdownToggleButton>@AccessType</DropdownToggleButton>
+        <DropdownMenu>
+            <DropdownItem @onclick="() => AccessType = EventAccessType.Private" Type="DropdownItemType.Link">Private</DropdownItem>
+            <DropdownItem @onclick="() => AccessType = EventAccessType.Public" Type="DropdownItemType.Link">Public</DropdownItem>
+        </DropdownMenu>
+    </Dropdown>
+    <div class="mb-6">
+        <InputText class="form-control" placeholder="Search items..." @bind-Value="SearchQuery"/>
+    </div>
+    <button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
+</div>
 
 @if (_count > 0)
 {
-    <div>
+    <div class="pt-3">
         <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
     </div>
 
@@ -64,29 +85,29 @@
     }
 }
 
-<div>
+<div class="pt-3">
     <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
 </div>
 
 @code {
-    [CascadingParameter]
-    Task<AuthenticationState>? AuthenticationState { get; set; }
-    
+    [CascadingParameter] Task<AuthenticationState>? AuthenticationState { get; set; }
+
     [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
-    
+
     private int _count = 0;
     private List<EventItemModelDTO> _eventsToDisplay = new();
     private Dictionary<int, List<EventItemModelDTO>> _loadedEvents = new();
-    
+
     private int _currentPageNumber = 1;
     private readonly int _pageSize = 5;
     private int _totalPage = 1;
+    private string SearchQuery = string.Empty;
+    private EventStatus Status { get; set; } = EventStatus.Inactive;
+    private EventAccessType AccessType { get; set; } = EventAccessType.Private;
 
     private Timer _timer;
-    
-    private string errorMessage;
-    
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -101,17 +122,17 @@
                 NavigationManager.NavigateTo("/");
             }
         }
-        
+
         _timer = new Timer();
         _timer.Interval = 1000; // Update every second
         _timer.Elapsed += OnTimerElapsed;
 
         _timer.Start();
         InternalNotificationService.OnError += HandleError;
-        
+
         await OnPageChangedAsync(_currentPageNumber);
     }
-    
+
     private void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
         foreach (var eventItem in _eventsToDisplay)
@@ -121,7 +142,7 @@
 
         StateHasChanged();
     }
-    
+
     private async Task ReloadEvents()
     {
         _currentPageNumber = 1;
@@ -129,14 +150,14 @@
         _loadedEvents.Clear();
         await GetCurrentPage();
     }
-    
+
     private async Task OnPageChangedAsync(int pageNumber)
     {
         _currentPageNumber = pageNumber;
 
         await GetCurrentPage();
     }
-    
+
     private async Task GetCurrentPage()
     {
         if (_loadedEvents.TryGetValue(_currentPageNumber, out var events))
@@ -147,15 +168,16 @@
         {
             if (_currentPageNumber > _totalPage || _currentPageNumber < 1)
             {
-                _currentPageNumber = _totalPage;
+                _currentPageNumber = _totalPage == 0 ? 1 : _totalPage;
             }
+
             await LoadEvents();
             await GetCurrentPage();
         }
-        
+
         StateHasChanged();
     }
-    
+
     private async Task LoadEvents()
     {
         var result = await EventPrivateService.GetEventsPagination(
@@ -163,41 +185,32 @@
             {
                 Page = _currentPageNumber,
                 Size = _pageSize,
-                Search = string.Empty
+                Search = SearchQuery,
+                Status = Status,
+                Access = AccessType
             });
 
         foreach (var eventItem in result.Events)
         {
             eventItem.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.Image.MainHash);
             eventItem.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.Image.ThumbnailHash);
-            
+
             eventItem.UserInfo.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.MainHash);
             eventItem.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.ThumbnailHash);
 
             eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
         }
-        
+
         _count = result.Count;
         _totalPage = (int)Math.Ceiling((double)_count / _pageSize);
 
         _loadedEvents.TryAdd(_currentPageNumber, result.Events);
-        
+
         StateHasChanged();
     }
-    
+
     private void HandleError(string message)
     {
-        // Set the error message from the NotificationService
-        errorMessage = message;
-        // StateHasChanged(); // Re-render the component to show the error
-        
         ErrorComponent.ShowError("Error!", message);
-    }
-    
-    
-    public void Dispose()
-    {
-        // Unsubscribe from the event when the component is disposed
-        InternalNotificationService.OnError -= HandleError;
     }
 }

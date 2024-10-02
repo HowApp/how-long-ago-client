@@ -27,7 +27,9 @@ public class EventPrivateService : IEventPrivateService
             var queryParams = new Dictionary<string, string>
             {
                 { "Page", request.Page.ToString() },
-                { "Size", request.Size.ToString() }
+                { "Size", request.Size.ToString() },
+                { "Status", request.Status.ToString() },
+                { "Access", request.Access.ToString() },
             };
             if (!string.IsNullOrEmpty(request.Search))
             {
