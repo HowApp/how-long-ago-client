@@ -23,7 +23,6 @@
             <div class="col-md-4">
                 <div class="card-body">
                     <p class="card-text">Created At: @_event.CreatedAt</p>
-                    <p class="card-text">Access: @_event.Access</p>
                     <p class="card-text">Likes: @_event.Likes</p>
                     <p class="card-text">Dislikes: @_event.Dislikes</p>
                     <p class="card-text">Saved: @_event.SavedCount</p>
@@ -104,7 +103,7 @@
     public int EventId { get; set; }
     
     private int _count = 0;
-    private EventItemModelDTO _event;
+    private EventItemPublicModelDTO _event;
     private List<RecordItemModelDTO> _recordsToDisplay = new();
     private Dictionary<int, List<RecordItemModelDTO>> _loadedRecords = new();
     

@@ -51,7 +51,6 @@
                 <div class="col-md-4">
                     <div class="card-body">
                         <p class="card-text">Created At: @item.CreatedAt</p>
-                        <p class="card-text">Access: @item.Access</p>
                         <p class="card-text">Likes: @item.Likes</p>
                         <p class="card-text">Dislikes: @item.Dislikes</p>
                         <p class="card-text">Saved: @item.SavedCount</p>
@@ -93,8 +92,8 @@
     Task<AuthenticationState>? AuthenticationState { get; set; }
 
     private int _count = 0;
-    private List<EventItemModelDTO> _eventsToDisplay = new();
-    private Dictionary<int, List<EventItemModelDTO>> _loadedEvents = new();
+    private List<EventItemPublicModelDTO> _eventsToDisplay = new();
+    private Dictionary<int, List<EventItemPublicModelDTO>> _loadedEvents = new();
     
     private int _currentPageNumber = 1;
     private readonly int _pageSize = 5;

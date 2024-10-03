@@ -5,5 +5,5 @@ using Models;
 public sealed class GetEventsPaginationPublicResponseDTO
 {
     public int Count { get; set; }
-    public List<EventItemModelDTO> Events { get; set; } = new List<EventItemModelDTO>();
+    public List<EventItemPublicModelDTO> Events { get; set; } = new ();
 }

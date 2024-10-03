@@ -21,6 +21,7 @@
     <Dropdown Color="DropdownColor.Dark" Direction="DropdownDirection.DropdownCentered">
         <DropdownToggleButton>@Status</DropdownToggleButton>
         <DropdownMenu>
+            <DropdownItem @onclick="() => Status = EventStatus.None" Type="DropdownItemType.Link">None</DropdownItem>
             <DropdownItem @onclick="() => Status = EventStatus.Inactive" Type="DropdownItemType.Link">Inactive</DropdownItem>
             <DropdownItem @onclick="() => Status = EventStatus.Active" Type="DropdownItemType.Link">Active</DropdownItem>
         </DropdownMenu>
@@ -28,6 +29,7 @@
     <Dropdown Color="DropdownColor.Dark">
         <DropdownToggleButton>@AccessType</DropdownToggleButton>
         <DropdownMenu>
+            <DropdownItem @onclick="() => AccessType = EventAccessType.None" Type="DropdownItemType.Link">None</DropdownItem>
             <DropdownItem @onclick="() => AccessType = EventAccessType.Private" Type="DropdownItemType.Link">Private</DropdownItem>
             <DropdownItem @onclick="() => AccessType = EventAccessType.Public" Type="DropdownItemType.Link">Public</DropdownItem>
         </DropdownMenu>
@@ -103,12 +105,12 @@
     [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
     
-    private EventStatus Status { get; set; } = EventStatus.Inactive;
-    private EventAccessType AccessType { get; set; } = EventAccessType.Private;
+    private EventStatus Status { get; set; } = EventStatus.None;
+    private EventAccessType AccessType { get; set; } = EventAccessType.None;
 
     private int _count = 0;
-    private List<EventItemModelDTO> _eventsToDisplay = new();
-    private Dictionary<int, List<EventItemModelDTO>> _loadedEvents = new();
+    private List<EventItemPrivateModelDTO> _eventsToDisplay = new();
+    private Dictionary<int, List<EventItemPrivateModelDTO>> _loadedEvents = new();
 
     private int _currentPageNumber = 1;
     private readonly int _pageSize = 5;
@@ -230,19 +232,19 @@
         NavigationManager.NavigateTo($"/dashboard/event/{eventId}/record");
     }
 
-    private void OnAccessToggleChanged(EventItemModelDTO eventItem)
+    private void OnAccessToggleChanged(EventItemPrivateModelDTO eventItemPrivate)
     {
-        Console.WriteLine($"Set event access type to Public - {!eventItem.AccessToggle} for event ID - {eventItem.Id}");
+        Console.WriteLine($"Set event access type to Public - {!eventItemPrivate.AccessToggle} for event ID - {eventItemPrivate.Id}");
 
-        eventItem.AccessToggle = !eventItem.AccessToggle;
-        EventPrivateService.UpdateEventAccessState(eventItem.Id, eventItem.AccessToggle);
+        eventItemPrivate.AccessToggle = !eventItemPrivate.AccessToggle;
+        EventPrivateService.UpdateEventAccessState(eventItemPrivate.Id, eventItemPrivate.AccessToggle);
     }
     
-    private void OnStatusToggleChanged(EventItemModelDTO eventItem)
+    private void OnStatusToggleChanged(EventItemPrivateModelDTO eventItemPrivate)
     {
-        Console.WriteLine($"Set event access type to Active - {eventItem.StatusToggle} for event ID - {eventItem.Id}");
+        Console.WriteLine($"Set event access type to Active - {eventItemPrivate.StatusToggle} for event ID - {eventItemPrivate.Id}");
 
-        eventItem.StatusToggle = !eventItem.StatusToggle;
-        EventPrivateService.UpdateEventActiveState(eventItem.Id, eventItem.StatusToggle);
+        eventItemPrivate.StatusToggle = !eventItemPrivate.StatusToggle;
+        EventPrivateService.UpdateEventActiveState(eventItemPrivate.Id, eventItemPrivate.StatusToggle);
     }
 }
