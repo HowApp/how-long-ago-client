@@ -30,6 +30,18 @@ public abstract class BaseClientAPI
         return await ProcessHttpResponse<TReturn>(response);
     }
     
+    protected async Task<TReturn> PatchAsync<TReturn, TRequest>(string uri, TRequest request)
+    {
+        var response = await _httpClient.PatchAsJsonAsync(uri, request);
+        return await ProcessHttpResponse<TReturn>(response);
+    }
+    
+    protected async Task<TReturn> PatchAsync<TReturn>(string uri)
+    {
+        var response = await _httpClient.PatchAsync(uri, null);
+        return await ProcessHttpResponse<TReturn>(response);
+    }
+    
     private static async Task<TReturn> ProcessHttpResponse<TReturn>(HttpResponseMessage response)
     {
         var result = await response.Content.ReadFromJsonAsync<TReturn>();

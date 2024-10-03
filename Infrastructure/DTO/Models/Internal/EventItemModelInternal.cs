@@ -4,4 +4,5 @@ public class EventItemModelInternal
 {
     public TimeSpan Duration { get; set; }
     public bool AccessToggle { get; set; }
+    public bool StatusToggle { get; set; }
 }

@@ -7,4 +7,6 @@ public interface IEventPrivateService
 {
     Task<GetEventsPaginationPrivateResponseDTO> GetEventsPagination(GetEventsPaginationPrivateRequestDTO request);
     Task<GetEventByIdResponseDTO> GetEventById(int eventId);
+    Task UpdateEventAccessState(int eventId, bool setPublic);
+    Task UpdateEventActiveState(int eventId, bool setActive);
 }

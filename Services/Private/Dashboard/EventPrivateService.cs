@@ -63,7 +63,12 @@ public class EventPrivateService : IEventPrivateService
             var url = $"api/public/event/{eventId}/details";
             
             var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdResponseDTO>>(url);
-            
+
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+                return new GetEventByIdResponseDTO();
+            }
             return response.Data;
         }
         catch (Exception e)
@@ -72,5 +77,53 @@ public class EventPrivateService : IEventPrivateService
         }
 
         return new GetEventByIdResponseDTO();
+    }
+
+    public async Task UpdateEventAccessState(int eventId, bool setPublic)
+    {
+        try
+        {
+            var queryParams = new Dictionary<string, string>
+            {
+                { "setPublic", setPublic.ToString() }
+            };
+
+            var url = QueryHelpers.AddQueryString($"api/dashboard/event/{eventId}/access-status", queryParams);
+
+            var response = await _clientApi.PatchAsync<ResultResponse>(url);
+
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+        }
+    }
+
+    public async Task UpdateEventActiveState(int eventId, bool setActive)
+    {
+        try
+        {
+            var queryParams = new Dictionary<string, string>
+            {
+                { "setActive", setActive.ToString() }
+            };
+
+            var url = QueryHelpers.AddQueryString($"api/dashboard/event/{eventId}/activate-status", queryParams);
+
+            var response = await _clientApi.PatchAsync<ResultResponse>(url);
+
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+        }
     }
 }

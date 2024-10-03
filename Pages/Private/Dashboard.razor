@@ -56,7 +56,11 @@
                         <p class="card-text">Created At: @item.CreatedAt</p>
                         <p class="card-text">Access: @item.Access</p>
                         <div class="mb-3">
-                            <Switch ValueExpression="() => item.AccessToggle" ValueChanged="(bool value) => { item.AccessToggle = value; AccessStateChanged(item);}" Label="Set public" />
+                            <Switch @onclick="() => OnAccessToggleChanged(item)" Value="item.AccessToggle" ValueExpression="() => item.AccessToggle" Label="Set public"/>
+                        </div>
+                        <p class="card-text">Status: @item.Status</p>
+                        <div class="mb-3">
+                            <Switch @onclick="() => OnStatusToggleChanged(item)" Value="item.StatusToggle" ValueExpression="() => item.StatusToggle" Label="Set active"/>
                         </div>
                         <p class="card-text">Likes: @item.Likes</p>
                         <p class="card-text">Dislikes: @item.Dislikes</p>
@@ -205,6 +209,7 @@
 
             eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
             eventItem.AccessToggle = eventItem.Access == EventAccessType.Public;
+            eventItem.StatusToggle = eventItem.Status == EventStatus.Active;
         }
 
         _count = result.Count;
@@ -219,14 +224,25 @@
     {
         ErrorComponent.ShowError("Error!", message);
     }
-    
+
     private void NavigateToEventInfo(int eventId)
     {
         NavigationManager.NavigateTo($"/dashboard/event/{eventId}/record");
     }
 
-    private void AccessStateChanged(EventItemModelDTO eventItem)
+    private void OnAccessToggleChanged(EventItemModelDTO eventItem)
     {
-        Console.WriteLine($"Set event access type to Public - {eventItem.AccessToggle} for event ID - {eventItem.Id}");
+        Console.WriteLine($"Set event access type to Public - {!eventItem.AccessToggle} for event ID - {eventItem.Id}");
+
+        eventItem.AccessToggle = !eventItem.AccessToggle;
+        EventPrivateService.UpdateEventAccessState(eventItem.Id, eventItem.AccessToggle);
+    }
+    
+    private void OnStatusToggleChanged(EventItemModelDTO eventItem)
+    {
+        Console.WriteLine($"Set event access type to Active - {eventItem.StatusToggle} for event ID - {eventItem.Id}");
+
+        eventItem.StatusToggle = !eventItem.StatusToggle;
+        EventPrivateService.UpdateEventActiveState(eventItem.Id, eventItem.StatusToggle);
     }
 }
