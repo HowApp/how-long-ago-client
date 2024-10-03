@@ -33,7 +33,7 @@
         </DropdownMenu>
     </Dropdown>
     <div class="mb-6">
-        <InputText class="form-control" placeholder="Search items..." @bind-Value="SearchQuery"/>
+        <InputText class="form-control" placeholder="Search items..." @bind-Value="_searchQuery"/>
     </div>
     <button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
 </div>
@@ -55,6 +55,9 @@
                     <div class="card-body">
                         <p class="card-text">Created At: @item.CreatedAt</p>
                         <p class="card-text">Access: @item.Access</p>
+                        <div class="mb-3">
+                            <Switch ValueExpression="() => item.AccessToggle" ValueChanged="(bool value) => { item.AccessToggle = value; AccessStateChanged(item);}" Label="Set public" />
+                        </div>
                         <p class="card-text">Likes: @item.Likes</p>
                         <p class="card-text">Dislikes: @item.Dislikes</p>
                         <p class="card-text">Saved: @item.SavedCount</p>
@@ -78,9 +81,9 @@
                     </div>
                 </div>
             </div>
-            @* <div class="card-footer"> *@
-            @*     <button class="btn btn-primary" onclick="@(() => NavigateToEventInfo(item.Id))">View Details</button> *@
-            @* </div> *@
+            <div class="card-footer">
+                <button class="btn btn-primary" onclick="@(() => NavigateToEventInfo(item.Id))">View Details</button>
+            </div>
         </div>
     }
 }
@@ -90,10 +93,14 @@
 </div>
 
 @code {
-    [CascadingParameter] Task<AuthenticationState>? AuthenticationState { get; set; }
+    [CascadingParameter] 
+    Task<AuthenticationState>? AuthenticationState { get; set; }
 
     [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
+    
+    private EventStatus Status { get; set; } = EventStatus.Inactive;
+    private EventAccessType AccessType { get; set; } = EventAccessType.Private;
 
     private int _count = 0;
     private List<EventItemModelDTO> _eventsToDisplay = new();
@@ -102,9 +109,7 @@
     private int _currentPageNumber = 1;
     private readonly int _pageSize = 5;
     private int _totalPage = 1;
-    private string SearchQuery = string.Empty;
-    private EventStatus Status { get; set; } = EventStatus.Inactive;
-    private EventAccessType AccessType { get; set; } = EventAccessType.Private;
+    private string _searchQuery = string.Empty;
 
     private Timer _timer;
 
@@ -185,7 +190,7 @@
             {
                 Page = _currentPageNumber,
                 Size = _pageSize,
-                Search = SearchQuery,
+                Search = _searchQuery,
                 Status = Status,
                 Access = AccessType
             });
@@ -199,6 +204,7 @@
             eventItem.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.ThumbnailHash);
 
             eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
+            eventItem.AccessToggle = eventItem.Access == EventAccessType.Public;
         }
 
         _count = result.Count;
@@ -212,5 +218,15 @@
     private void HandleError(string message)
     {
         ErrorComponent.ShowError("Error!", message);
+    }
+    
+    private void NavigateToEventInfo(int eventId)
+    {
+        NavigationManager.NavigateTo($"/dashboard/event/{eventId}/record");
+    }
+
+    private void AccessStateChanged(EventItemModelDTO eventItem)
+    {
+        Console.WriteLine($"Set event access type to Public - {eventItem.AccessToggle} for event ID - {eventItem.Id}");
     }
 }

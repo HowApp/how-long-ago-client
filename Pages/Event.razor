@@ -50,8 +50,6 @@
     </div>
 }
 
-
-
 @if (_count > 0)
 {
     <div>
@@ -111,7 +109,7 @@
     private Dictionary<int, List<RecordItemModelDTO>> _loadedRecords = new();
     
     private int _currentPageNumber = 1;
-    private readonly int _pageSize = 5;
+    private int _pageSize = 5;
     private int _totalPage = 1;
     
     private Timer _timer;

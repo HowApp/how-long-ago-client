@@ -26,7 +26,13 @@
 
 <div>Hello user</div>
 
-<button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
+<div class="d-flex gap-2 mb-8">
+    <div class="mb-6">
+        <InputText class="form-control" placeholder="Search items..." @bind-Value="_searchQuery"/>
+    </div>
+    <button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
+</div>
+
 <br/>
 
 @if (_count > 0)
@@ -93,6 +99,7 @@
     private int _currentPageNumber = 1;
     private readonly int _pageSize = 5;
     private int _totalPage = 1;
+    private string _searchQuery = string.Empty;
 
     private Timer _timer;
     
@@ -153,7 +160,7 @@
         {
             if (_currentPageNumber > _totalPage || _currentPageNumber < 1)
             {
-                _currentPageNumber = _totalPage;
+                _currentPageNumber = _totalPage == 0 ? 1 : _totalPage;
             }
             await LoadEvents();
             await GetCurrentPage();
@@ -169,7 +176,7 @@
             {
                 Page = _currentPageNumber,
                 Size = _pageSize,
-                Search = string.Empty
+                Search = _searchQuery
             });
 
         foreach (var eventItem in result.Events)
