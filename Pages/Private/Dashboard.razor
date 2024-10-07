@@ -234,17 +234,15 @@
 
     private void OnAccessToggleChanged(EventItemPrivateModelDTO eventItemPrivate)
     {
-        Console.WriteLine($"Set event access type to Public - {!eventItemPrivate.AccessToggle} for event ID - {eventItemPrivate.Id}");
-
         eventItemPrivate.AccessToggle = !eventItemPrivate.AccessToggle;
+        eventItemPrivate.Access = eventItemPrivate.AccessToggle ? EventAccessType.Public : EventAccessType.Private;
         EventPrivateService.UpdateEventAccessState(eventItemPrivate.Id, eventItemPrivate.AccessToggle);
     }
     
     private void OnStatusToggleChanged(EventItemPrivateModelDTO eventItemPrivate)
     {
-        Console.WriteLine($"Set event access type to Active - {eventItemPrivate.StatusToggle} for event ID - {eventItemPrivate.Id}");
-
         eventItemPrivate.StatusToggle = !eventItemPrivate.StatusToggle;
+        eventItemPrivate.Status = eventItemPrivate.StatusToggle ? EventStatus.Active : EventStatus.Inactive;
         EventPrivateService.UpdateEventActiveState(eventItemPrivate.Id, eventItemPrivate.StatusToggle);
     }
 }

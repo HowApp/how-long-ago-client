@@ -3,6 +3,7 @@ namespace HowClient.Services.Private.Dashboard;
 using ClientAPI;
 using Infrastructure.DTO.Private.Dashboard.Event;
 using Infrastructure.DTO.Public.Event;
+using Infrastructure.Enums;
 using InternalNotification;
 using Microsoft.AspNetCore.WebUtilities;
 using ResultType;
@@ -124,6 +125,34 @@ public class EventPrivateService : IEventPrivateService
         catch (Exception e)
         {
             Console.WriteLine($"Request failed: {e}");
+        }
+    }
+
+    public async Task<LikeState> UpdateEventLikeState(int eventId, LikeState likeState)
+    {
+        try
+        {
+            var queryParams = new Dictionary<string, string>
+            {
+                { "request", ((int)likeState).ToString() }
+            };
+
+            var url = QueryHelpers.AddQueryString($"api/dashboard/event/{eventId}/like", queryParams);
+
+            var response = await _clientApi.PatchAsync<ResultResponse<LikeState>>(url);
+
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+                return likeState;
+            }
+
+            return response.Data;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+            return likeState;
         }
     }
 }

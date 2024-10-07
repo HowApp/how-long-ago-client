@@ -3,11 +3,14 @@
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
 @using HowClient.Infrastructure.DTO.Public.Event
+@using HowClient.Infrastructure.Enums
 @using HowClient.Infrastructure.Helpers
+@using HowClient.Services.Private.Dashboard
 @using HowClient.Services.Public.Event
 @using Microsoft.AspNetCore.Components.Authorization
 
 @inject IEventPublicService EventPublicService
+@inject IEventPrivateService EventPrivateService
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
 
@@ -51,7 +54,12 @@
                 <div class="col-md-4">
                     <div class="card-body">
                         <p class="card-text">Created At: @item.CreatedAt</p>
-                        <p class="card-text">Likes: @item.Likes</p>
+                        <p class="card-text">
+                            Likes: @item.Likes
+                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeLikeEventState(item)">
+                                <Badge Color="@(item.OwnLikeState != LikeState.Like ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
+                            </button>
+                        </p>
                         <p class="card-text">Dislikes: @item.Dislikes</p>
                         <p class="card-text">Saved: @item.SavedCount</p>
                         <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
@@ -86,7 +94,10 @@
 </div>
 
 @code{
+    // TODO separate authorized users
+    
     string? UserName { get; set; }
+    private bool _isAuthenticated { get; set; } = false;
 
     [CascadingParameter]
     Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -112,6 +123,7 @@
             if (user?.Identity is not null && user.Identity.IsAuthenticated)
             {
                 UserName = user.Identity.Name;
+                _isAuthenticated = true;
             }
         }
 
@@ -195,6 +207,15 @@
         _loadedEvents.TryAdd(_currentPageNumber, result.Events);
         
         StateHasChanged();
+    }
+
+    private async Task ChangeLikeEventState(EventItemPublicModelDTO eventItem)
+    {
+        eventItem.OwnLikeState = await EventPrivateService.UpdateEventLikeState(
+            eventItem.Id, 
+            eventItem.OwnLikeState == LikeState.Like ? LikeState.None : LikeState.Like);
+
+        eventItem.Likes = eventItem.OwnLikeState == LikeState.Like ? ++eventItem.Likes : --eventItem.Likes;
     }
 
     private void NavigateToEventInfo(int eventId)
