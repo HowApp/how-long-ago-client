@@ -1,4 +1,4 @@
-namespace HowClient.Infrastructure.DTO.Private.Dashboard.Event;
+namespace HowClient.Infrastructure.DTO.Private.Event;
 
 using Models;
 

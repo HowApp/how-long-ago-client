@@ -3,9 +3,9 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Timers
 @using HowClient.Configuration
-@using HowClient.Infrastructure.DTO.Private.Dashboard.Event
+@using HowClient.Infrastructure.DTO.Private.Event
 @using HowClient.Infrastructure.Helpers
-@using HowClient.Services.Private.Dashboard
+@using HowClient.Services.Private.Event
 @using HowClient.Services.InternalNotification
 @using HowClient.Infrastructure.Enums
 @using Components
@@ -100,7 +100,7 @@
 
 @code {
     [CascadingParameter] 
-    Task<AuthenticationState>? AuthenticationState { get; set; }
+    Task<AuthenticationState> AuthenticationState { get; set; }
 
     [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
@@ -128,7 +128,7 @@
             var authState = await AuthenticationState;
             var user = authState?.User;
 
-            if (!user.Identity.IsAuthenticated)
+            if (user?.Identity is not null && !user.Identity.IsAuthenticated)
             {
                 NavigationManager.NavigateTo("/");
                 return;

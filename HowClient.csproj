@@ -24,8 +24,4 @@
       <_ContentIncludedByDefault Remove="Pages\Dashboard\Dashboard.razor" />
     </ItemGroup>
 
-    <ItemGroup>
-      <AdditionalFiles Include="Pages\Private\Dashboard\Dashboard.razor" />
-    </ItemGroup>
-
 </Project>

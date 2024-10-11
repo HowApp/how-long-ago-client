@@ -6,7 +6,8 @@ using Microsoft.Extensions.Options;
 using Services.Auth;
 using Services.CookieHandler;
 using Services.InternalNotification;
-using Services.Private.Dashboard;
+using Services.Private.Event;
+using Services.Private.Record;
 using Services.Provider;
 using Services.Public.Event;
 using Services.Public.Record;
@@ -36,6 +37,7 @@ public static class ServiceCollectionExtensions
 
         // Private
         services.AddScoped<IEventPrivateService, EventPrivateService>();
+        services.AddScoped<IRecordPrivateService, RecordPrivateService>();
         
         return services;
     }

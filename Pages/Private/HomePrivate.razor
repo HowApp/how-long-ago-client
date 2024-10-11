@@ -2,10 +2,10 @@
 @using System.Timers
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
-@using HowClient.Infrastructure.DTO.Private.Dashboard.Event
+@using HowClient.Infrastructure.DTO.Private.Event
 @using HowClient.Infrastructure.Enums
 @using HowClient.Infrastructure.Helpers
-@using HowClient.Services.Private.Dashboard
+@using HowClient.Services.Private.Event
 @using Microsoft.AspNetCore.Components.Authorization
 
 @inject IEventPrivateService EventPrivateService
@@ -94,7 +94,7 @@
     string? UserName { get; set; }
 
     [CascadingParameter]
-    Task<AuthenticationState>? AuthenticationState { get; set; }
+    Task<AuthenticationState> AuthenticationState { get; set; }
 
     private int _count = 0;
     private List<EventItemPrivateModelDTO> _eventsToDisplay = new();

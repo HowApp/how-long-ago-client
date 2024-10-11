@@ -1,8 +1,7 @@
-namespace HowClient.Services.Private.Dashboard;
+namespace HowClient.Services.Private.Event;
 
 using ClientAPI;
-using Infrastructure.DTO.Private.Dashboard.Event;
-using Infrastructure.DTO.Public.Event;
+using Infrastructure.DTO.Private.Event;
 using Infrastructure.Enums;
 using InternalNotification;
 using Microsoft.AspNetCore.WebUtilities;
@@ -57,18 +56,18 @@ public class EventPrivateService : IEventPrivateService
         return new GetEventsPaginationPrivateResponseDTO();
     }
 
-    public async Task<GetEventByIdResponseDTO> GetEventById(int eventId)
+    public async Task<GetEventByIdPrivateResponseDTO> GetEventById(int eventId)
     {
         try
         {
             var url = $"api/public/event/{eventId}/details";
             
-            var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdResponseDTO>>(url);
+            var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdPrivateResponseDTO>>(url);
 
             if (response.Failed)
             {
                 _notificationService.NotifyError(response.ToString());
-                return new GetEventByIdResponseDTO();
+                return new GetEventByIdPrivateResponseDTO();
             }
             return response.Data;
         }
@@ -77,7 +76,7 @@ public class EventPrivateService : IEventPrivateService
             Console.WriteLine($"Request failed: {e}");
         }
 
-        return new GetEventByIdResponseDTO();
+        return new GetEventByIdPrivateResponseDTO();
     }
 
     public async Task UpdateEventAccessState(int eventId, bool setPublic)
