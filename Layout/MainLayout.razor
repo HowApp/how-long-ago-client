@@ -41,32 +41,49 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    bool _isAuthorized;
+    
     private Sidebar _sidebar;
-    IEnumerable<NavItem> navItems;
+    IEnumerable<NavItem> _navItems;
     
     private Offcanvas _offcanvas;
     
     private Dictionary<long, (string title, string message)> _errors = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        if (AuthenticationState is not null)
+        {
+            var user = (await AuthenticationState).User;
+        
+            // Check if the user is authenticated
+            _isAuthorized = user.Identity != null && user.Identity.IsAuthenticated;
+        }
+    }
+
     private async Task<SidebarDataProviderResult> SidebarDataProvider(SidebarDataProviderRequest request)
     {
-        if (navItems is null)
-            navItems = GetNavItems();
+        if (_navItems is null)
+            _navItems = GetNavItems();
         
-        return await Task.FromResult(request.ApplyTo(navItems));
+        return await Task.FromResult(request.ApplyTo(_navItems));
     }
 
     private IEnumerable<NavItem> GetNavItems()
     {
-        navItems = new List<NavItem>
+        _navItems = new List<NavItem>
         {
-            new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
-            new NavItem { Id = "2", Href = "/counter", IconName = IconName.PlusSquareFill, Text = "Counter"},
-            new NavItem { Id = "3", Href = "/dashboard", IconName = IconName.Database, Text = "Dashboard"},
-            new NavItem { Id = "4", Href = "/hub-test", IconName = IconName.Github, Text = "HubTest"}
+            new NavItem { Id = "1", Href = _isAuthorized ? "/authorized" : "/", IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
+            new NavItem { Id = "2", Href = "/dashboard", IconName = IconName.Database, Text = "Dashboard"},
+            new NavItem { Id = "3", Href = "/hub-test", IconName = IconName.Github, Text = "HubTest"}
         };
 
-        return navItems;
+        return _navItems;
     }
     
     async Task LogoutClick()
@@ -75,7 +92,7 @@
         NavigationManager.NavigateTo("/login");
     }
     
-    async Task LoginClick()
+    void LoginClick()
     {
         NavigationManager.NavigateTo("/login");
     }

@@ -131,6 +131,7 @@
             if (!user.Identity.IsAuthenticated)
             {
                 NavigationManager.NavigateTo("/");
+                return;
             }
         }
 

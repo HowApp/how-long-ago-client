@@ -1,17 +1,31 @@
-﻿@page "/"
+﻿@page "/authorized"
 @using System.Timers
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
-@using HowClient.Infrastructure.DTO.Public.Event
+@using HowClient.Infrastructure.DTO.Private.Dashboard.Event
+@using HowClient.Infrastructure.Enums
 @using HowClient.Infrastructure.Helpers
-@using HowClient.Services.Public.Event
+@using HowClient.Services.Private.Dashboard
 @using Microsoft.AspNetCore.Components.Authorization
 
-@inject IEventPublicService EventPublicService
+@inject IEventPrivateService EventPrivateService
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
 
 <PageTitle>Home</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Hello @UserName !!</h1>
+        <p>Welcome to your new app.</p>
+    </Authorized>
+    <Authorizing>
+        <h1>Loading ...</h1>
+    </Authorizing>
+</AuthorizeView>
+
+<div>Hello user</div>
+
 <div class="d-flex gap-2 mb-8">
     <div class="mb-6">
         <InputText class="form-control" placeholder="Search items..." @bind-Value="_searchQuery"/>
@@ -37,7 +51,12 @@
                 <div class="col-md-4">
                     <div class="card-body">
                         <p class="card-text">Created At: @item.CreatedAt</p>
-                        <p class="card-text">Likes: @item.Likes</p>
+                        <p class="card-text">
+                            Likes: @item.Likes
+                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeLikeEventState(item)">
+                                <Badge Color="@(item.OwnLikeState != LikeState.Like ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
+                            </button>
+                        </p>
                         <p class="card-text">Dislikes: @item.Dislikes</p>
                         <p class="card-text">Saved: @item.SavedCount</p>
                         <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
@@ -72,12 +91,14 @@
 </div>
 
 @code{
+    string? UserName { get; set; }
+
     [CascadingParameter]
     Task<AuthenticationState>? AuthenticationState { get; set; }
 
     private int _count = 0;
-    private List<EventItemPublicModelDTO> _eventsToDisplay = new();
-    private Dictionary<int, List<EventItemPublicModelDTO>> _loadedEvents = new();
+    private List<EventItemPrivateModelDTO> _eventsToDisplay = new();
+    private Dictionary<int, List<EventItemPrivateModelDTO>> _loadedEvents = new();
     
     private int _currentPageNumber = 1;
     private readonly int _pageSize = 5;
@@ -95,7 +116,11 @@
 
             if (user?.Identity is not null && user.Identity.IsAuthenticated)
             {
-                NavigationManager.NavigateTo("/authorized/");
+                UserName = user.Identity.Name;
+            }
+            else
+            {
+                NavigationManager.NavigateTo($"/");
                 return;
             }
         }
@@ -155,8 +180,8 @@
     
     private async Task LoadEvents()
     {
-        var result = await EventPublicService.GetEventsPagination(
-            new GetEventsPaginationPublicRequestDTO
+        var result = await EventPrivateService.GetEventsPagination(
+            new GetEventsPaginationPrivateRequestDTO
             {
                 Page = _currentPageNumber,
                 Size = _pageSize,
@@ -182,8 +207,17 @@
         StateHasChanged();
     }
 
+    private async Task ChangeLikeEventState(EventItemPublicModelDTO eventItem)
+    {
+        eventItem.OwnLikeState = await EventPrivateService.UpdateEventLikeState(
+            eventItem.Id, 
+            eventItem.OwnLikeState == LikeState.Like ? LikeState.None : LikeState.Like);
+
+        eventItem.Likes = eventItem.OwnLikeState == LikeState.Like ? ++eventItem.Likes : --eventItem.Likes;
+    }
+
     private void NavigateToEventInfo(int eventId)
     {
-        NavigationManager.NavigateTo($"/event/{eventId}/record");
+        NavigationManager.NavigateTo($"/authorized/event/{eventId}/record");
     }
 }
