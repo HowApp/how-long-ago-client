@@ -9,26 +9,40 @@
 
 <div class="bb-page">
     <Sidebar @ref="_sidebar"
-             IconName="IconName.BootstrapFill"
-             Title="Blazor Bootstrap"
+             IconName="IconName.HSquare"
+             Title="HOW"
+             BadgeText="v1.0.0"
              DataProvider="SidebarDataProvider" />
 
     <Offcanvas @ref="_offcanvas" />
 
     <main>
-        <div class="bb-top-row px-4 d-flex justify-content-end">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-            <AuthorizeView>
-                <Authorized>
-                    <button type="button" class="btn btn-link ml-md-auto" @onclick="@LogoutClick">Logout</button>
-                </Authorized>
-                <NotAuthorized>
-                    <button type="button" class="btn btn-link ml-md-auto" @onclick="@LoginClick">Login</button>
-                </NotAuthorized>
-            </AuthorizeView>
-            <button type="button" class="btn btn-link ml-md-auto" @onclick="@ShowOffCanvasContent">
-                Notifications <Badge Color="BadgeColor.Danger"><Icon Name="IconName.Bicycle" /> @_errors.Count</Badge>
-            </button>
+        <div class="bb-top-row px-4 d-flex justify-content-between align-items-center header-container">
+            <!-- Left Side (empty) for spacing -->
+            <div class="left-side"></div>
+
+            <!-- Centered Logo -->
+            <div class="text-center logo-container">
+                <NavLink href="/">
+                    <img src="favicon_main.webp" class="project-icon" alt="Project Icon"/>
+                </NavLink>
+            </div>
+
+            <!-- Right Side: About and Buttons -->
+            <div class="right-side d-flex align-items-center">
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank" class="mr-3">About</a>
+                <AuthorizeView>
+                    <Authorized>
+                        <button type="button" class="btn btn-link mr-3" @onclick="@LogoutClick">Logout</button>
+                    </Authorized>
+                    <NotAuthorized>
+                        <button type="button" class="btn btn-link mr-3" @onclick="@LoginClick">Login</button>
+                    </NotAuthorized>
+                </AuthorizeView>
+                <button type="button" class="btn btn-link" @onclick="@ShowOffCanvasContent">
+                    Notifications <Badge Color="BadgeColor.Danger"><Icon Name="IconName.Bicycle"/> @_errors.Count</Badge>
+                </button>
+            </div>
         </div>
 
         <article class="content px-4">
