@@ -58,41 +58,41 @@
 
 foreach (var record in _recordsToDisplay)
 {
-<div class="card">
-    <div class="row" >
-        <div class="col-md-4">
-            <div class="card-body">
-                <p class="card-text">Created At: @record.CreatedAt</p>
-                <p class="card-text">Description: @record.Description</p>
-                <p class="card-text">Likes: @record.Likes</p>
-                <p class="card-text">Dislikes: @record.Dislikes</p>
+    <div class="card">
+        <div class="row" >
+            <div class="col-md-4">
+                <div class="card-body">
+                    <p class="card-text">Created At: @record.CreatedAt</p>
+                    <p class="card-text">Description: @record.Description</p>
+                    <p class="card-text">Likes: @record.Likes</p>
+                    <p class="card-text">Dislikes: @record.Dislikes</p>
+                </div>
             </div>
-        </div>
-        <div class="col-md-8">
-            <div class="card-body"  style="background-color: #708090">
-                <Carousel>
-                    @if (!record.Images.Any())
-                    {
-                    <CarouselItem Active="true">
-                        <img src=@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, string.Empty) class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 200px">
-                    </CarouselItem>
-                    }
-                    else
-                    {
-                    for (int i = 0; i < record.Images.Count; i++)
-                    {
-                    var recordImageThumbnail = record.Images[i].ThumbnailHash;
+            <div class="col-md-8">
+                <div class="card-body"  style="background-color: #708090">
+                    <Carousel>
+                        @if (!record.Images.Any())
+                        {
+                            <CarouselItem Active="true">
+                                <img src=@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, string.Empty) class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 200px">
+                            </CarouselItem>
+                        }
+                        else
+                        {
+                            for (int i = 0; i < record.Images.Count; i++)
+                            {
+                                var recordImageThumbnail = record.Images[i].ThumbnailHash;
 
-                    <CarouselItem Active="@(i == 0)">
-                        <img src=@recordImageThumbnail class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 250px; margin: 0 auto;">
-                    </CarouselItem>
-                    }
-                    }
-                </Carousel>
+                                <CarouselItem Active="@(i == 0)">
+                                    <img src=@recordImageThumbnail class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 250px; margin: 0 auto;">
+                                </CarouselItem>
+                            }
+                        }
+                    </Carousel>
+                </div>
             </div>
         </div>
     </div>
-</div>
 }
 
 <div>

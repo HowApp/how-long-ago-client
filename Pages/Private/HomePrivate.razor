@@ -53,11 +53,16 @@
                         <p class="card-text">Created At: @item.CreatedAt</p>
                         <p class="card-text">
                             Likes: @item.Likes
-                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeLikeEventState(item)">
+                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeLikeEventState(item)" disabled="@item.ButtonLikeDisable">
                                 <Badge Color="@(item.OwnLikeState != LikeState.Like ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
                             </button>
                         </p>
-                        <p class="card-text">Dislikes: @item.Dislikes</p>
+                        <p class="card-text">
+                            Dislikes: @item.Dislikes
+                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeDislikeEventState(item)" disabled="@item.ButtonDislikeDisable">
+                                <Badge Color="@(item.OwnLikeState != LikeState.Dislike ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
+                            </button>
+                        </p>
                         <p class="card-text">Saved: @item.SavedCount</p>
                         <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
                     </div>
@@ -209,11 +214,83 @@
 
     private async Task ChangeLikeEventState(EventItemPublicModelDTO eventItem)
     {
-        eventItem.OwnLikeState = await EventPrivateService.UpdateEventLikeState(
-            eventItem.Id, 
-            eventItem.OwnLikeState == LikeState.Like ? LikeState.None : LikeState.Like);
+        eventItem.ButtonLikeDisable = true;
+        try
+        {
+            await UpdateLikeState(
+                eventItem, 
+                eventItem.OwnLikeState == LikeState.Like ? LikeState.None : LikeState.Like);
+        }
+        finally
+        {
+            eventItem.ButtonLikeDisable = false;
+        }
+    }
+    
+    private async Task ChangeDislikeEventState(EventItemPublicModelDTO eventItem)
+    {
+        eventItem.ButtonDislikeDisable = true;
+        try
+        {
+            await UpdateLikeState(
+                eventItem, 
+                eventItem.OwnLikeState == LikeState.Dislike ? LikeState.None : LikeState.Dislike);
+        }
+        finally
+        {
+            eventItem.ButtonDislikeDisable = false;
+        }
+    }
 
-        eventItem.Likes = eventItem.OwnLikeState == LikeState.Like ? ++eventItem.Likes : --eventItem.Likes;
+    private async Task UpdateLikeState(EventItemPublicModelDTO eventItem, LikeState state)
+    {
+        var oldState = eventItem.OwnLikeState;
+        
+        eventItem.OwnLikeState = await EventPrivateService.UpdateEventLikeState(eventItem.Id, state);
+
+        if (oldState == eventItem.OwnLikeState)
+        {
+            await Task.Delay(1500);
+            return;
+        }
+        
+        if (oldState == LikeState.None)
+        {
+            if (eventItem.OwnLikeState == LikeState.Like)
+            {
+                eventItem.Likes++;
+            }
+            else if (eventItem.OwnLikeState == LikeState.Dislike)
+            {
+                eventItem.Dislikes++;
+            }
+        }
+        else if (oldState == LikeState.Like)
+        {
+            if (eventItem.OwnLikeState == LikeState.None)
+            {
+                eventItem.Likes--;
+            }
+            else if (eventItem.OwnLikeState == LikeState.Dislike)
+            {
+                eventItem.Likes--;
+                eventItem.Dislikes++;
+            }
+        }
+        else if (oldState == LikeState.Dislike)
+        {
+            if (eventItem.OwnLikeState == LikeState.None)
+            {
+                eventItem.Dislikes--;
+            }
+            else if (eventItem.OwnLikeState == LikeState.Like)
+            {
+                eventItem.Dislikes--;
+                eventItem.Likes++;
+            }
+        }
+
+        await Task.Delay(1500);
     }
 
     private void NavigateToEventInfo(int eventId)

@@ -9,7 +9,7 @@
     --bb-sidebar-brand-image-width: 24px;
     --bb-sidebar-brand-image-height: 24px;
     --bb-sidebar-title-badge-text-color: rgb(85, 208, 84);
-    --bb-sidebar-title-badge-background-color: rgba(25,135,84,var(--bs-bg-opacity,1));
+    --bb-sidebar-title-badge-background-color: rgba(25,135,84,0.8);
     --bb-sidebar-navbar-toggler-icon-color: rgb(178, 1, 227);
     --bb-sidebar-navbar-toggler-background-color: rgba(0,0,0,0.08);
     --bb-sidebar-content-border-color: rgb(76, 6, 86);
