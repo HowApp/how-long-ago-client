@@ -212,7 +212,7 @@
         StateHasChanged();
     }
 
-    private async Task ChangeLikeEventState(EventItemPublicModelDTO eventItem)
+    private async Task ChangeLikeEventState(EventItemPrivateModelDTO eventItem)
     {
         eventItem.ButtonLikeDisable = true;
         try
@@ -227,7 +227,7 @@
         }
     }
     
-    private async Task ChangeDislikeEventState(EventItemPublicModelDTO eventItem)
+    private async Task ChangeDislikeEventState(EventItemPrivateModelDTO eventItem)
     {
         eventItem.ButtonDislikeDisable = true;
         try
@@ -242,7 +242,7 @@
         }
     }
 
-    private async Task UpdateLikeState(EventItemPublicModelDTO eventItem, LikeState state)
+    private async Task UpdateLikeState(EventItemPrivateModelDTO eventItem, LikeState state)
     {
         var oldState = eventItem.OwnLikeState;
         

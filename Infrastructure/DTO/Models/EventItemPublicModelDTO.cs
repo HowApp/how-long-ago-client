@@ -1,6 +1,5 @@
 namespace HowClient.Infrastructure.DTO.Models;
 
-using Enums;
 using Internal;
 
 public class EventItemPublicModelDTO : EventItemModelInternal
@@ -12,7 +11,5 @@ public class EventItemPublicModelDTO : EventItemModelInternal
     public DateTime CreatedAt { get; set; }
     public int Likes { get; set; }
     public int Dislikes { get; set; }
-    public LikeState OwnLikeState { get; set; }
     public int SavedCount { get; set; }
-    public bool IsSavedByUser { get; set; }
 }

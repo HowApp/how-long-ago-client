@@ -3,6 +3,7 @@ namespace HowClient.Services.Private.Event;
 using ClientAPI;
 using Infrastructure.DTO.Private.Event;
 using Infrastructure.Enums;
+using Infrastructure.Helpers;
 using InternalNotification;
 using Microsoft.AspNetCore.WebUtilities;
 using ResultType;
@@ -20,7 +21,9 @@ public class EventPrivateService : IEventPrivateService
         _notificationService = notificationService;
     }
 
-    public async Task<GetEventsPaginationPrivateResponseDTO> GetEventsPagination(GetEventsPaginationPrivateRequestDTO request)
+    public async Task<GetEventsPaginationPrivateResponseDTO> GetEventsPagination(
+        GetEventsPaginationPrivateRequestDTO request,
+        ApiRequestAccessFilter accessFilter = ApiRequestAccessFilter.None)
     {
         try
         {
@@ -35,8 +38,10 @@ public class EventPrivateService : IEventPrivateService
             {
                 queryParams.Add("search", request.Search);
             }
-            
-            var url = QueryHelpers.AddQueryString("api/dashboard/event/list-pagination/own", queryParams);
+
+            var url = QueryHelpers.AddQueryString(
+                $"api/dashboard/event/list-pagination/{ApiAccessHelper.GetAccess(accessFilter)}", 
+                queryParams);
             
             var response = await _clientApi.GetAsync<ResultResponse<GetEventsPaginationPrivateResponseDTO>>(url);
 
