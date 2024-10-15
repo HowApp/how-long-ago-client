@@ -5,5 +5,5 @@ using Models;
 public sealed class GetRecordsPaginationResponseDTO
 {
     public int Count { get; set; }
-    public List<RecordItemModelDTO> Records { get; set; } = new();
+    public List<RecordItemPublicModelDTO> Records { get; set; } = new();
 }

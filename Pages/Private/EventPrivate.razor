@@ -3,13 +3,13 @@
 @using System.Timers
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
-@using HowClient.Infrastructure.DTO.Public.Record
+@using HowClient.Infrastructure.DTO.Private.Record
 @using HowClient.Infrastructure.Helpers
-@using HowClient.Services.Public.Event
-@using HowClient.Services.Public.Record
+@using HowClient.Services.Private.Event
+@using HowClient.Services.Private.Record
 
-@inject IRecordPublicService RecordPublicService;
-@inject IEventPublicService EventPublicService;
+@inject IRecordPrivateService RecordPrivateService
+@inject IEventPrivateService EventPrivateService
 @inject AppConfigurations AppConfigurations
 
 <h3>Event</h3>
@@ -105,9 +105,9 @@ foreach (var record in _recordsToDisplay)
     public int EventId { get; set; }
     
     private int _count = 0;
-    private EventItemPublicModelDTO _event;
-    private List<RecordItemModelDTO> _recordsToDisplay = new();
-    private Dictionary<int, List<RecordItemModelDTO>> _loadedRecords = new();
+    private EventItemPrivateModelDTO _event;
+    private List<RecordItemPrivateModelDTO> _recordsToDisplay = new();
+    private Dictionary<int, List<RecordItemPrivateModelDTO>> _loadedRecords = new();
     
     private int _currentPageNumber = 1;
     private int _pageSize = 5;
@@ -162,9 +162,9 @@ foreach (var record in _recordsToDisplay)
     
     private async Task LoadRecords()
     {
-        var result = await RecordPublicService.GetRecordsPagination(
+        var result = await RecordPrivateService.GetRecordsPagination(
             EventId,
-            new GetRecordsPaginationRequestDTO
+            new GetRecordsPaginationPrivateRequestDTO
             {
                 Page = _currentPageNumber,
                 Size = _pageSize
@@ -176,9 +176,7 @@ foreach (var record in _recordsToDisplay)
             {
                 imageItem.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, imageItem.MainHash);
                 imageItem.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, imageItem.ThumbnailHash);
-
             }
-            
         }
         
         _count = result.Count;
@@ -189,7 +187,7 @@ foreach (var record in _recordsToDisplay)
 
     private async Task LoadEventDetail()
     {
-        _event = await EventPublicService.GetEventById(EventId);
+        _event = await EventPrivateService.GetEventById(EventId);
 
         _event.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.MainHash);
         _event.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.ThumbnailHash);
