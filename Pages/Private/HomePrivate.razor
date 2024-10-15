@@ -63,7 +63,12 @@
                                 <Badge Color="@(item.OwnLikeState != LikeState.Dislike ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
                             </button>
                         </p>
-                        <p class="card-text">Saved: @item.SavedCount</p>
+                        <p class="card-text">
+                            Saved: @item.SavedCount
+                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeSavedEventState(item)" disabled="@item.ButtonSavedDisable">
+                                <Badge Color="@(item.IsSavedByUser ? BadgeColor.Danger : BadgeColor.Dark)"><Icon Name="IconName.BookmarkPlusFill"/></Badge>
+                            </button>
+                        </p>
                         <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
                     </div>
                 </div>
@@ -212,6 +217,37 @@
         StateHasChanged();
     }
 
+    private async Task ChangeSavedEventState(EventItemPrivateModelDTO eventItem)
+    {
+        eventItem.ButtonSavedDisable = true;
+        try
+        {
+            var oldValue = eventItem.IsSavedByUser;
+            var success = false;
+            
+            if (eventItem.IsSavedByUser)
+            {
+                success = await EventPrivateService.DeleteEventFromSaved(eventItem.Id);
+            }
+            else
+            {
+                success = await EventPrivateService.AddEventToSaved(eventItem.Id);
+            }
+
+            if (success)
+            {
+                eventItem.IsSavedByUser = !eventItem.IsSavedByUser;
+                eventItem.SavedCount = oldValue ? --eventItem.SavedCount : ++eventItem.SavedCount;
+            }
+        }
+        finally
+        {
+            eventItem.ButtonSavedDisable = false;
+        }
+        
+        await Task.Delay(400);
+    }
+    
     private async Task ChangeLikeEventState(EventItemPrivateModelDTO eventItem)
     {
         eventItem.ButtonDislikeDisable = true;

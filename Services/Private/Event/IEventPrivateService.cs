@@ -12,4 +12,6 @@ public interface IEventPrivateService
     Task UpdateEventAccessState(int eventId, bool setPublic);
     Task UpdateEventActiveState(int eventId, bool setActive);
     Task<LikeState> UpdateEventLikeState(int eventId, LikeState likeState);
+    Task<bool> AddEventToSaved(int eventId);
+    Task<bool> DeleteEventFromSaved(int eventId);
 }

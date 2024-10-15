@@ -159,4 +159,42 @@ public class EventPrivateService : IEventPrivateService
             return likeState;
         }
     }
+
+    public async Task<bool> AddEventToSaved(int eventId)
+    {
+        try
+        {
+            var response = await _clientApi.PostAsync<ResultResponse>($"api/dashboard/event/{eventId}/saved/add");
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+            }
+            
+            return response.Succeeded;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteEventFromSaved(int eventId)
+    {
+        try
+        {
+            var response = await _clientApi.DeleteAsync<ResultResponse>($"api/dashboard/event/{eventId}/saved/delete");
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+            }
+
+            return response.Succeeded;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+            return false;
+        }
+    }
 }

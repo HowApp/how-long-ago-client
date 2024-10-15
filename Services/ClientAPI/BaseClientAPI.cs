@@ -42,6 +42,12 @@ public abstract class BaseClientAPI
         return await ProcessHttpResponse<TReturn>(response);
     }
     
+    protected async Task<TReturn> DeleteAsync<TReturn>(string uri)
+    {
+        var response = await _httpClient.DeleteAsync(uri);
+        return await ProcessHttpResponse<TReturn>(response);
+    }
+    
     private static async Task<TReturn> ProcessHttpResponse<TReturn>(HttpResponseMessage response)
     {
         var result = await response.Content.ReadFromJsonAsync<TReturn>();
