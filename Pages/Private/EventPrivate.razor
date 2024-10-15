@@ -1,9 +1,10 @@
-@page "/authorize/event/{EventId:int:min(1)}/record"
+@page "/authorized/event/{EventId:int:min(1)}/record"
 
 @using System.Timers
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
 @using HowClient.Infrastructure.DTO.Private.Record
+@using HowClient.Infrastructure.Enums
 @using HowClient.Infrastructure.Helpers
 @using HowClient.Services.Private.Event
 @using HowClient.Services.Private.Record
@@ -16,88 +17,103 @@
 
 @if (_event is not null)
 {
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title">Event Name: @_event.Name</h5>
-    </div>
-    <div class="row" >
-        <div class="col-md-4">
-            <div class="card-body">
-                <p class="card-text">Created At: @_event.CreatedAt</p>
-                <p class="card-text">Likes: @_event.Likes</p>
-                <p class="card-text">Dislikes: @_event.Dislikes</p>
-                <p class="card-text">Saved: @_event.SavedCount</p>
-                <p>Was @_event.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
-            </div>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Event Name: @_event.Name</h5>
         </div>
-        <div class="col-md-4">
-            <div class="card-body">
-                <img src=@_event.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card-body">
-                <div class="card-text">
-                    <p class="card-text">Author</p>
-                    <p class="card-text">Name: @_event.UserInfo.FirstName @_event.UserInfo.LastName</p>
+        <div class="row" >
+            <div class="col-md-4">
+                <div class="card-body">
+                    <p class="card-text">Created At: @_event.CreatedAt</p>
+                    <p class="card-text">
+                        Likes: @_event.Likes
+                        <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeLikeEventState()" disabled="@_event.ButtonLikeDisable">
+                            <Badge Color="@(_event.OwnLikeState != LikeState.Like ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
+                        </button>
+                    </p>
+                    <p class="card-text">
+                        Dislikes: @_event.Dislikes
+                        <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeDislikeEventState()" disabled="@_event.ButtonDislikeDisable">
+                            <Badge Color="@(_event.OwnLikeState != LikeState.Dislike ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
+                        </button>
+                    </p>
+                    <p class="card-text">
+                        Saved: @_event.SavedCount
+                        <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeSavedEventState()" disabled="@_event.ButtonSavedDisable">
+                            <Badge Color="@(_event.IsSavedByUser ? BadgeColor.Danger : BadgeColor.Dark)"><Icon Name="IconName.BookmarkPlusFill"/></Badge>
+                        </button>
+                    </p>
+                    <p>Was @_event.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
                 </div>
-                <div class="card-img-top">
-                    <img src=@_event.UserInfo.Image.ThumbnailHash class="rounded float-md-none" alt="Author Image" IsThumbnail="true" style="height: 100px">
+            </div>
+            <div class="col-md-4">
+                <div class="card-body">
+                    <img src=@_event.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-body">
+                    <div class="card-text">
+                        <p class="card-text">Author</p>
+                        <p class="card-text">Name: @_event.UserInfo.FirstName @_event.UserInfo.LastName</p>
+                    </div>
+                    <div class="card-img-top">
+                        <img src=@_event.UserInfo.Image.ThumbnailHash class="rounded float-md-none" alt="Author Image" IsThumbnail="true" style="height: 100px">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 }
 
 @if (_count > 0)
 {
-<div>
-    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
-</div>
+    <div>
+        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+    </div>
 
-foreach (var record in _recordsToDisplay)
-{
-    <div class="card">
-        <div class="row" >
-            <div class="col-md-4">
-                <div class="card-body">
-                    <p class="card-text">Created At: @record.CreatedAt</p>
-                    <p class="card-text">Description: @record.Description</p>
-                    <p class="card-text">Likes: @record.Likes</p>
-                    <p class="card-text">Dislikes: @record.Dislikes</p>
+    foreach (var record in _recordsToDisplay)
+    {
+        <div class="card">
+            <div class="row" >
+                <div class="col-md-4">
+                    <div class="card-body">
+                        <p class="card-text">Created At: @record.CreatedAt</p>
+                        <p class="card-text">Description: @record.Description</p>
+                        <p class="card-text">Likes: @record.Likes</p>
+                        <p class="card-text">Dislikes: @record.Dislikes</p>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-8">
-                <div class="card-body"  style="background-color: #708090">
-                    <Carousel>
-                        @if (!record.Images.Any())
-                        {
-                            <CarouselItem Active="true">
-                                <img src=@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, string.Empty) class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 200px">
-                            </CarouselItem>
-                        }
-                        else
-                        {
-                            for (int i = 0; i < record.Images.Count; i++)
+                <div class="col-md-8">
+                    <div class="card-body"  style="background-color: #708090">
+                        <Carousel>
+                            @if (!record.Images.Any())
                             {
-                                var recordImageThumbnail = record.Images[i].ThumbnailHash;
-
-                                <CarouselItem Active="@(i == 0)">
-                                    <img src=@recordImageThumbnail class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 250px; margin: 0 auto;">
+                                <CarouselItem Active="true">
+                                    <img src=@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, string.Empty) class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 200px">
                                 </CarouselItem>
                             }
-                        }
-                    </Carousel>
+                            else
+                            {
+                                for (int i = 0; i < record.Images.Count; i++)
+                                {
+                                    var recordImageThumbnail = record.Images[i].ThumbnailHash;
+
+                                    <CarouselItem Active="@(i == 0)">
+                                        <img src=@recordImageThumbnail class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 250px; margin: 0 auto;">
+                                    </CarouselItem>
+                                }
+                            }
+                        </Carousel>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-}
+    }
 
-<div>
-    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
-</div>
+    <div>
+        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+    </div>
 }
 
 @code {
@@ -196,5 +212,89 @@ foreach (var record in _recordsToDisplay)
         _event.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.UserInfo.Image.ThumbnailHash);
 
         _event.Duration = DateTime.Now - _event.CreatedAt;
+    }
+    
+    private async Task ChangeSavedEventState()
+    {
+        _event.ButtonSavedDisable = true;
+        try
+        {
+            var oldValue = _event.IsSavedByUser;
+            var success = false;
+            
+            if (_event.IsSavedByUser)
+            {
+                success = await EventPrivateService.DeleteEventFromSaved(_event.Id);
+            }
+            else
+            {
+                success = await EventPrivateService.AddEventToSaved(_event.Id);
+            }
+
+            if (success)
+            {
+                _event.IsSavedByUser = !_event.IsSavedByUser;
+                _event.SavedCount = oldValue ? --_event.SavedCount : ++_event.SavedCount;
+            }
+        }
+        finally
+        {
+            _event.ButtonSavedDisable = false;
+            StateHasChanged();
+        }
+        
+        await Task.Delay(400);
+    }
+    
+    private async Task ChangeLikeEventState()
+    {
+        _event.ButtonDislikeDisable = true;
+        _event.ButtonLikeDisable = true;
+        try
+        {
+            await UpdateLikeState(_event.OwnLikeState == LikeState.Like ? LikeState.None : LikeState.Like);
+        }
+        finally
+        {
+            _event.ButtonDislikeDisable = false;
+            _event.ButtonLikeDisable = false;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task ChangeDislikeEventState()
+    {
+        _event.ButtonDislikeDisable = true;
+        _event.ButtonLikeDisable = true;
+        try
+        {
+            await UpdateLikeState(_event.OwnLikeState == LikeState.Dislike ? LikeState.None : LikeState.Dislike);
+        }
+        finally
+        {
+            _event.ButtonDislikeDisable = false;
+            _event.ButtonLikeDisable = false;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task UpdateLikeState(LikeState state)
+    {
+        var oldState = _event.OwnLikeState;
+        
+        _event.OwnLikeState = await EventPrivateService.UpdateEventLikeState(_event.Id, state);
+
+        if (oldState == _event.OwnLikeState)
+        {
+            await Task.Delay(1500);
+            return;
+        }
+        
+        EventLikeDislikeHelper.CountLikeDislike(oldState, _event.OwnLikeState, out int likes, out int dislikes);
+
+        _event.Likes += likes;
+        _event.Dislikes += dislikes;
+
+        await Task.Delay(1500);
     }
 }

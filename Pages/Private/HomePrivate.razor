@@ -294,41 +294,10 @@
             return;
         }
         
-        if (oldState == LikeState.None)
-        {
-            if (eventItem.OwnLikeState == LikeState.Like)
-            {
-                eventItem.Likes++;
-            }
-            else if (eventItem.OwnLikeState == LikeState.Dislike)
-            {
-                eventItem.Dislikes++;
-            }
-        }
-        else if (oldState == LikeState.Like)
-        {
-            if (eventItem.OwnLikeState == LikeState.None)
-            {
-                eventItem.Likes--;
-            }
-            else if (eventItem.OwnLikeState == LikeState.Dislike)
-            {
-                eventItem.Likes--;
-                eventItem.Dislikes++;
-            }
-        }
-        else if (oldState == LikeState.Dislike)
-        {
-            if (eventItem.OwnLikeState == LikeState.None)
-            {
-                eventItem.Dislikes--;
-            }
-            else if (eventItem.OwnLikeState == LikeState.Like)
-            {
-                eventItem.Dislikes--;
-                eventItem.Likes++;
-            }
-        }
+        EventLikeDislikeHelper.CountLikeDislike(oldState, eventItem.OwnLikeState, out int likes, out int dislikes);
+
+        eventItem.Likes += likes;
+        eventItem.Dislikes += dislikes;
 
         await Task.Delay(1500);
     }

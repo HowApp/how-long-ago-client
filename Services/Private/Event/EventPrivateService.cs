@@ -65,6 +65,7 @@ public class EventPrivateService : IEventPrivateService
     {
         try
         {
+            // TODO add new endpoint for authorized by id
             var url = $"api/public/event/{eventId}/details";
             
             var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdPrivateResponseDTO>>(url);

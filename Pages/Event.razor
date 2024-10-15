@@ -6,10 +6,12 @@
 @using HowClient.Infrastructure.Helpers
 @using HowClient.Services.Public.Event
 @using HowClient.Services.Public.Record
+@using Microsoft.AspNetCore.Components.Authorization
 
 @inject IRecordPublicService RecordPublicService;
 @inject IEventPublicService EventPublicService;
 @inject AppConfigurations AppConfigurations
+@inject NavigationManager NavigationManager
 
 <h3>Event</h3>
 
@@ -102,6 +104,9 @@
     [Parameter]
     public int EventId { get; set; }
     
+    [CascadingParameter]
+    Task<AuthenticationState> AuthenticationState { get; set; }
+    
     private int _count = 0;
     private EventItemPublicModelDTO _event;
     private List<RecordItemPublicModelDTO> _recordsToDisplay = new();
@@ -115,6 +120,18 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (AuthenticationState is not null)
+        {
+            var authState = await AuthenticationState;
+            var user = authState?.User;
+
+            if (user?.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo($"/authorized/event/{EventId}/record");
+                return;
+            }
+        }
+
         await OnPageChangedAsync(_currentPageNumber);
         
         _timer = new Timer();
