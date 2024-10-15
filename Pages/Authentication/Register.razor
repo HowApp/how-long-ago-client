@@ -9,38 +9,43 @@
     Registration
 </h1>
 
-<div class="text-center">
-    <NavLink href="/">
-        <img src="logo.webp" class="rounded mx-auto d-block" alt="Project Icon"/>
-    </NavLink>
-</div>
+<div class="row">
+    <div class="col-md-6">
+        <EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="RegisterRequest">
+            <DataAnnotationsValidator />
 
-<EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="RegisterRequest">
-    <DataAnnotationsValidator />
-    
-    <label for="inputUsername" class="sr-only">User Name</label>
-    <InputText id="inputUsername" class="form-control" placeholder="Username" autofocus @bind-Value="@RegisterRequest.UserName" />
-    <ValidationMessage For="@(() => RegisterRequest.UserName)" />
-    
-    <label for="inputEmail" class="sr-only">Email</label>
-    <InputText id="inputEmail" class="form-control" placeholder="Username" autofocus @bind-Value="@RegisterRequest.Email" />
-    <ValidationMessage For="@(() => RegisterRequest.Email)" />
-    
-    <label for="inputPassword" class="sr-only">Password</label>
-        <InputText type="password" id="inputPassword" class="form-control" placeholder="Password" @bind-Value="@RegisterRequest.Password" />
-    <ValidationMessage For="@(() => RegisterRequest.Password)" />
-    
-    <label for="inputPasswordConfirm" class="sr-only">Password Confirmation</label>
-    <InputText type="password" id="inputPasswordConfirm" class="form-control" placeholder="Password Confirmation" @bind-Value="@RegisterRequest.PasswordConfirm" />
-    <ValidationMessage For="@(() => RegisterRequest.PasswordConfirm)" />
-    
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Create account</button>
-    
-    <label class="text-danger">@Error</label>
-    <NavLink href="login">
-        <h6 class="font-weight-normal text-center">Already have an account? Click here to login</h6>
-    </NavLink>
-</EditForm>
+            <label for="inputUsername" class="sr-only">User Name</label>
+            <InputText id="inputUsername" class="form-control" placeholder="Username" autofocus @bind-Value="@RegisterRequest.UserName" />
+            <ValidationMessage For="@(() => RegisterRequest.UserName)" />
+
+            <label for="inputEmail" class="sr-only">Email</label>
+            <InputText id="inputEmail" class="form-control" placeholder="Username" autofocus @bind-Value="@RegisterRequest.Email" />
+            <ValidationMessage For="@(() => RegisterRequest.Email)" />
+
+            <label for="inputPassword" class="sr-only">Password</label>
+            <InputText type="password" id="inputPassword" class="form-control" placeholder="Password" @bind-Value="@RegisterRequest.Password" />
+            <ValidationMessage For="@(() => RegisterRequest.Password)" />
+
+            <label for="inputPasswordConfirm" class="sr-only">Password Confirmation</label>
+            <InputText type="password" id="inputPasswordConfirm" class="form-control" placeholder="Password Confirmation" @bind-Value="@RegisterRequest.PasswordConfirm" />
+            <ValidationMessage For="@(() => RegisterRequest.PasswordConfirm)" />
+
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Create account</button>
+
+            <label class="text-danger">@Error</label>
+            <NavLink href="login">
+                <h6 class="font-weight-normal text-center">Already have an account? Click here to login</h6>
+            </NavLink>
+        </EditForm>
+    </div>
+    <div class="col-md-6">
+        <div class="text-center">
+            <NavLink href="/">
+                <img src="logo.webp" class="rounded mx-auto d-block" alt="Project Icon" style="max-height: 450px"/>
+            </NavLink>
+        </div>
+    </div>
+</div>
 
 @code {
     RegisterRequestDTO RegisterRequest { get; set; } = new RegisterRequestDTO();

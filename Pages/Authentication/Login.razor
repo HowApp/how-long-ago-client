@@ -9,36 +9,39 @@
     Login
 </h1>
 
-<div class="text-center">
-    <NavLink href="/">
-        <img src="logo.webp" class="rounded mx-auto d-block" alt="Project Icon"/>
-    </NavLink>
-</div>
+<div class="row">
+    <div class="col-md-6">
+        <EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="LoginRequest">
+            <DataAnnotationsValidator/>
 
-<EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="LoginRequest">
-    <DataAnnotationsValidator />
-    
-    <label for="inputUserName" class="sr-only">User Name</label>
-    <InputText id="inputUserName" class="form-control" @bind-Value="LoginRequest.Email" autofocus placeholder="Username" />
-    <ValidationMessage For="@(() => LoginRequest.Email)" />
-    
-    <label for="inputPassword" class="sr-only">Password</label>
-    <InputText id="inputPassword" class="form-control" @bind-Value="LoginRequest.Password" autofocus placeholder="Password" />
-    <ValidationMessage For="@(() => LoginRequest.Password)" />
-    
-    <div class="form-check m-3">
-        <InputCheckbox id="inputRememberMe" class="form-check-input" @bind-Value="@LoginRequest.RememberMe" />
-        <label class="form-check-label" for="inputRememberMe">Remember Me</label>
+            <label for="inputUserName" class="sr-only">User Name</label>
+            <InputText id="inputUserName" class="form-control" @bind-Value="LoginRequest.Email" autofocus placeholder="Username"/>
+            <ValidationMessage For="@(() => LoginRequest.Email)"/>
+
+            <label for="inputPassword" class="sr-only">Password</label>
+            <InputText id="inputPassword" class="form-control" @bind-Value="LoginRequest.Password" autofocus placeholder="Password"/>
+            <ValidationMessage For="@(() => LoginRequest.Password)"/>
+
+            <div class="form-check m-3">
+                <InputCheckbox id="inputRememberMe" class="form-check-input" @bind-Value="@LoginRequest.RememberMe"/>
+                <label class="form-check-label" for="inputRememberMe">Remember Me</label>
+            </div>
+
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+
+            <label class="text-danger">@Error</label>
+
+            <NavLink href="register">
+                <h6 class="font-weight-normal text-center">Create account</h6>
+            </NavLink>
+        </EditForm>
     </div>
-    
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-    
-    <label class="text-danger">@Error</label>
-    
-    <NavLink href="register">
-        <h6 class="font-weight-normal text-center">Create account</h6>
-    </NavLink>
-</EditForm>
+    <div class="text-center col-md-6">
+        <NavLink href="/">
+            <img src="logo.webp" class="rounded mx-auto d-block" alt="Project Icon" style="max-height: 450px"/>
+        </NavLink>
+    </div>
+</div>
 
 @code {
     LoginRequestDTO LoginRequest { get; set; } = new LoginRequestDTO();

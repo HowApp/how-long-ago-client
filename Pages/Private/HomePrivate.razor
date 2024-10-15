@@ -214,6 +214,7 @@
 
     private async Task ChangeLikeEventState(EventItemPrivateModelDTO eventItem)
     {
+        eventItem.ButtonDislikeDisable = true;
         eventItem.ButtonLikeDisable = true;
         try
         {
@@ -223,6 +224,7 @@
         }
         finally
         {
+            eventItem.ButtonDislikeDisable = false;
             eventItem.ButtonLikeDisable = false;
         }
     }
@@ -230,6 +232,7 @@
     private async Task ChangeDislikeEventState(EventItemPrivateModelDTO eventItem)
     {
         eventItem.ButtonDislikeDisable = true;
+        eventItem.ButtonLikeDisable = true;
         try
         {
             await UpdateLikeState(
@@ -239,6 +242,7 @@
         finally
         {
             eventItem.ButtonDislikeDisable = false;
+            eventItem.ButtonLikeDisable = false;
         }
     }
 
