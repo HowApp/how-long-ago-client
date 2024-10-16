@@ -223,11 +223,6 @@
         StateHasChanged();
     }
 
-    private void HandleError(string message)
-    {
-        ErrorComponent.ShowError("Error!", message);
-    }
-
     private void NavigateToEventInfo(int eventId)
     {
         NavigationManager.NavigateTo($"/dashboard/event/{eventId}/record");
@@ -245,5 +240,10 @@
         eventItemPrivate.StatusToggle = !eventItemPrivate.StatusToggle;
         eventItemPrivate.Status = eventItemPrivate.StatusToggle ? EventStatus.Active : EventStatus.Inactive;
         EventPrivateService.UpdateEventActiveState(eventItemPrivate.Id, eventItemPrivate.StatusToggle);
+    }
+    
+    private void HandleError(string message)
+    {
+        ErrorComponent.ShowError("Error!", message);
     }
 }

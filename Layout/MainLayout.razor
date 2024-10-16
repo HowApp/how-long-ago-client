@@ -126,7 +126,7 @@
         await _offcanvas.ShowAsync<ErrorItemOffCanvasComponent>(title: "Errors List", parameters: parameters);
     }
 
-    private void RemoveErrorItem(long errorId)
+    public void RemoveErrorItem(long errorId)
     {
         _errors.Remove(errorId);
     }

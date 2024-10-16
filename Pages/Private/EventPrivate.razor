@@ -8,10 +8,15 @@
 @using HowClient.Infrastructure.Helpers
 @using HowClient.Services.Private.Event
 @using HowClient.Services.Private.Record
+@using HowClient.Services.InternalNotification
+@using Microsoft.AspNetCore.Components.Authorization
+@using Components
 
 @inject IRecordPrivateService RecordPrivateService
 @inject IEventPrivateService EventPrivateService
 @inject AppConfigurations AppConfigurations
+@inject NavigationManager NavigationManager
+@inject InternalNotificationService InternalNotificationService
 
 <h3>Event</h3>
 
@@ -120,6 +125,12 @@
     [Parameter]
     public int EventId { get; set; }
     
+    [CascadingParameter] 
+    Task<AuthenticationState> AuthenticationState { get; set; }
+    
+    [CascadingParameter(Name = "ErrorComponent")]
+    protected IErrorComponent ErrorComponent { get; set; }
+    
     private int _count = 0;
     private EventItemPrivateModelDTO _event;
     private List<RecordItemPrivateModelDTO> _recordsToDisplay = new();
@@ -133,13 +144,29 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await OnPageChangedAsync(_currentPageNumber);
+        await base.OnInitializedAsync();
+        
+        if (AuthenticationState is not null)
+        {
+            var authState = await AuthenticationState;
+            var user = authState?.User;
+
+            if (user?.Identity is not null && !user.Identity.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo($"/event/{EventId}/record");
+                return;
+            }
+        }
         
         _timer = new Timer();
         _timer.Interval = 1000; // Update every second
         _timer.Elapsed += OnTimerElapsed;
 
         _timer.Start();
+        
+        InternalNotificationService.OnError += HandleError;
+        
+        await OnPageChangedAsync(_currentPageNumber);
     }
     
     private void OnTimerElapsed(object sender, ElapsedEventArgs e)
@@ -296,5 +323,10 @@
         _event.Dislikes += dislikes;
 
         await Task.Delay(1500);
+    }
+    
+    private void HandleError(string message)
+    {
+        ErrorComponent.ShowError("Error!", message);
     }
 }
