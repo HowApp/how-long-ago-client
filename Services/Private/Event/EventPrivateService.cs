@@ -61,11 +61,35 @@ public class EventPrivateService : IEventPrivateService
         return new GetEventsPaginationPrivateResponseDTO();
     }
 
-    public async Task<GetEventByIdPrivateResponseDTO> GetEventById(int eventId)
+    public async Task<GetEventByIdPrivateResponseDTO> GetActivePublicEventById(int eventId)
     {
         try
         {
-            var url = $"api/dashboard/event/{eventId}/public-active";
+            var url = $"api/dashboard/event/{eventId}/{ApiAccessHelper.GetAccess(ApiRequestAccessFilter.None)}";
+            
+            var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdPrivateResponseDTO>>(url);
+
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+                return new GetEventByIdPrivateResponseDTO();
+            }
+            return response.Data;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+        }
+
+        return new GetEventByIdPrivateResponseDTO();
+    }
+
+    public async Task<GetEventByIdPrivateResponseDTO> GetEventById(int eventId,
+        ApiRequestAccessFilter accessFilter = ApiRequestAccessFilter.None)
+    {
+        try
+        {
+            var url = $"api/dashboard/event/{eventId}/{ApiAccessHelper.GetAccess(accessFilter)}";
             
             var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdPrivateResponseDTO>>(url);
 
