@@ -1,6 +1,7 @@
-@page "/dashboard/event/{EventId:int:min(1)}/record"
+@page "/authorized/dashboard/event/{EventId:int:min(1)}/record"
 
 @using System.Timers
+@using HowClient.Common.Routing
 @using HowClient.Components
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
@@ -98,7 +99,7 @@
 
             if (user?.Identity is not null && !user.Identity.IsAuthenticated)
             {
-                NavigationManager.NavigateTo($"/");
+                NavigationManager.NavigateTo(Rout.Home.HomePublicPage);
                 return;
             }
         }

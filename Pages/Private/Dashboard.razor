@@ -1,4 +1,4 @@
-@page "/dashboard"
+@page "/authorized/dashboard"
 @using HowClient.Infrastructure.DTO.Models
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Timers
@@ -9,6 +9,7 @@
 @using HowClient.Services.InternalNotification
 @using HowClient.Infrastructure.Enums
 @using Components
+@using HowClient.Common.Routing
 
 @inject IEventPrivateService EventPrivateService
 @inject AppConfigurations AppConfigurations
@@ -130,7 +131,7 @@
 
             if (user?.Identity is not null && !user.Identity.IsAuthenticated)
             {
-                NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo(Rout.Home.HomePublicPage);
                 return;
             }
         }
@@ -225,7 +226,7 @@
 
     private void NavigateToEventInfo(int eventId)
     {
-        NavigationManager.NavigateTo($"/dashboard/event/{eventId}/record");
+        NavigationManager.NavigateTo(Rout.Dashboard.EventPrivatePage(eventId));
     }
 
     private void OnAccessToggleChanged(EventItemPrivateModelDTO eventItemPrivate)

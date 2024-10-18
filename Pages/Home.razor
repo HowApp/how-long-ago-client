@@ -1,5 +1,7 @@
 ﻿@page "/"
+@page "/public"
 @using System.Timers
+@using HowClient.Common.Routing
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
 @using HowClient.Infrastructure.DTO.Public.Event
@@ -95,7 +97,7 @@
 
             if (user?.Identity is not null && user.Identity.IsAuthenticated)
             {
-                NavigationManager.NavigateTo("/authorized/");
+                NavigationManager.NavigateTo(Rout.Home.HomePrivatePage);
                 return;
             }
         }
@@ -184,6 +186,6 @@
 
     private void NavigateToEventInfo(int eventId)
     {
-        NavigationManager.NavigateTo($"/event/{eventId}/record");
+        NavigationManager.NavigateTo(Rout.Event.EventPublicPage(eventId));
     }
 }

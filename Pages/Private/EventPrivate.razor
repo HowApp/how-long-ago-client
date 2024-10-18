@@ -11,6 +11,7 @@
 @using HowClient.Services.InternalNotification
 @using Microsoft.AspNetCore.Components.Authorization
 @using Components
+@using HowClient.Common.Routing
 
 @inject IRecordPrivateService RecordPrivateService
 @inject IEventPrivateService EventPrivateService
@@ -153,7 +154,7 @@
 
             if (user?.Identity is not null && !user.Identity.IsAuthenticated)
             {
-                NavigationManager.NavigateTo($"/event/{EventId}/record");
+                NavigationManager.NavigateTo(Rout.Event.EventPublicPage(EventId));
                 return;
             }
         }

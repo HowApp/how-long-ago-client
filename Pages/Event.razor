@@ -1,5 +1,6 @@
-@page "/event/{EventId:int:min(1)}/record"
+@page "/public/event/{EventId:int:min(1)}/record"
 @using System.Timers
+@using HowClient.Common.Routing
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
 @using HowClient.Infrastructure.DTO.Public.Record
@@ -127,7 +128,7 @@
 
             if (user?.Identity is not null && user.Identity.IsAuthenticated)
             {
-                NavigationManager.NavigateTo($"/authorized/event/{EventId}/record");
+                NavigationManager.NavigateTo(Rout.Event.EventPrivatePage(EventId));
                 return;
             }
         }

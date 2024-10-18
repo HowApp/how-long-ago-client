@@ -9,6 +9,7 @@
 @using HowClient.Services.Private.Event
 @using Microsoft.AspNetCore.Components.Authorization
 @using Components
+@using HowClient.Common.Routing
 
 @inject IEventPrivateService EventPrivateService
 @inject AppConfigurations AppConfigurations
@@ -136,7 +137,7 @@
             }
             else
             {
-                NavigationManager.NavigateTo($"/");
+                NavigationManager.NavigateTo(Rout.Home.HomePrivatePage);
                 return;
             }
         }
@@ -312,7 +313,7 @@
 
     private void NavigateToEventInfo(int eventId)
     {
-        NavigationManager.NavigateTo($"/authorized/event/{eventId}/record");
+        NavigationManager.NavigateTo(Rout.Event.EventPrivatePage(eventId));
     }
     
     private void HandleError(string message)

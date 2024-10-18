@@ -1,6 +1,7 @@
 ﻿@using HowClient.Services.Provider
 @using Microsoft.AspNetCore.Components.Authorization
 @using Components
+@using HowClient.Common.Routing
 
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
@@ -92,8 +93,8 @@
     {
         _navItems = new List<NavItem>
         {
-            new NavItem { Id = "1", Href = _isAuthorized ? "/authorized" : "/", IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
-            new NavItem { Id = "2", Href = "/dashboard", IconName = IconName.Database, Text = "Dashboard"},
+            new NavItem { Id = "1", Href = _isAuthorized ? Rout.Home.HomePrivatePage : Rout.Home.HomePublicPage, IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
+            new NavItem { Id = "2", Href = Rout.Dashboard.PrivatePage, IconName = IconName.Database, Text = "Dashboard"},
             new NavItem { Id = "3", Href = "/hub-test", IconName = IconName.Github, Text = "HubTest"}
         };
 
@@ -103,12 +104,12 @@
     async Task LogoutClick()
     {
         await AuthStateProvider.Logout();
-        NavigationManager.NavigateTo("/login");
+        NavigationManager.NavigateTo(Rout.Login);
     }
     
     void LoginClick()
     {
-        NavigationManager.NavigateTo("/login");
+        NavigationManager.NavigateTo(Rout.Login);
     }
 
     public void ShowError(string title, string message)
