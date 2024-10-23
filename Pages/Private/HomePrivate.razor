@@ -204,7 +204,9 @@
             {
                 Page = _currentPageNumber,
                 Size = _pageSize,
-                Search = _searchQuery
+                Search = _searchQuery,
+                Status = EventStatus.Active,
+                Access = EventAccessType.Public
             });
 
         foreach (var eventItem in result.Events)
