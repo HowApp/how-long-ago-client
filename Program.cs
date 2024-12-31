@@ -1,11 +1,10 @@
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-
 namespace HowClient;
 
 using Extensions;
 using Services.ClientAPI;
 using Services.CookieHandler;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 public class Program
 {
@@ -19,26 +18,27 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
         builder.Services.AddOptions();
-        builder.Services.AddAuthorizationCore();
+        // builder.Services.AddAuthorizationCore();
         
-        builder.Services.AddScoped(sp => 
-            new HttpClient
-            {
-                BaseAddress = new Uri( builder.Configuration.GetValue<string>("AppConfigurations:FrontendUrl") ?? 
-                                       builder.HostEnvironment.BaseAddress)
-            });
-        
-        builder.Services.AddHttpClient<AuthorizedClientAPI>(client =>
-        {
-            client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppConfigurations:BackendUrl") ??
-                                         builder.HostEnvironment.BaseAddress);
-        }).AddHttpMessageHandler<CookieHandler>();
-        
-        builder.Services.AddHttpClient<AnonymousClientAPI>(client =>
-        {
-            client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppConfigurations:BackendUrl") ??
-                                         builder.HostEnvironment.BaseAddress);
-        });
+        // builder.Services.AddScoped(sp => 
+        //     new HttpClient
+        //     {
+        //         BaseAddress = new Uri( builder.Configuration.GetValue<string>("AppConfigurations:FrontendUrl") ?? 
+        //                                builder.HostEnvironment.BaseAddress)
+        //     });
+        //
+        // builder.Services.AddHttpClient<AuthorizedClientAPI>(client =>
+        // {
+        //     client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppConfigurations:BackendUrl") ??
+        //                                  builder.HostEnvironment.BaseAddress);
+        // }).AddHttpMessageHandler<CookieHandler>();
+        //
+        // builder.Services.AddHttpClient<AnonymousClientAPI>(client =>
+        // {
+        //     client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppConfigurations:BackendUrl") ??
+        //                                  builder.HostEnvironment.BaseAddress);
+        // });
+
 
         await builder.Build().RunAsync();
     }

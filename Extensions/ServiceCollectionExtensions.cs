@@ -25,10 +25,11 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddCustomServices(this IServiceCollection services)
     {
-        services.AddScoped<CookieHandler>();
-        services.AddScoped<CustomStateProvider>();
-        services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredService<CustomStateProvider>());
-        services.AddScoped<IAuthServices, AuthServices>();
+        // services.AddScoped<CookieHandler>();
+        // services.AddScoped<CustomStateProvider>();
+        // services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredService<CustomStateProvider>());
+        // services.AddScoped<IAuthServices, AuthServices>();
+        
         services.AddSingleton<InternalNotificationService>();
 
         //Public
