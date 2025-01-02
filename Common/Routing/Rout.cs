@@ -10,6 +10,8 @@ public static class Rout
     
     
     public static string Login => "/login";
+    public static string LoginIdentity => "authentication/login";
+    public static string LogoutIdentity => "authentication/logout";
     public static string Registration => "/registration";
     
     public static class Home
@@ -20,13 +22,13 @@ public static class Rout
     
     public static class Event
     {
-        public static string EventPublicPage(int EventId) => $"/{_public}/{_event}/{EventId}/{_record}";
-        public static string EventPrivatePage(int EventId) => $"/{_authorized}/{_event}/{EventId}/{_record}";
+        public static string EventPublicPage(int eventId) => $"/{_public}/{_event}/{eventId}/{_record}";
+        public static string EventPrivatePage(int eventId) => $"/{_authorized}/{_event}/{eventId}/{_record}";
     }
     
     public static class Dashboard
     {
         public static string PrivatePage => $"/{_authorized}/{_dashboard}";
-        public static string EventPrivatePage(int EventId) => $"/{_authorized}/{_dashboard}/{_event}/{EventId}/{_record}";
+        public static string EventPrivatePage(int eventId) => $"/{_authorized}/{_dashboard}/{_event}/{eventId}/{_record}";
     }
 }

@@ -9,10 +9,9 @@
 
     <ItemGroup>
         <PackageReference Include="Blazor.Bootstrap" Version="3.0.0" />
-<!--        <PackageReference Include="Duende.AccessTokenManagement.OpenIdConnect" Version="3.1.1" />-->
-<!--        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.10" />-->
         <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.10" PrivateAssets="all" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.10" />

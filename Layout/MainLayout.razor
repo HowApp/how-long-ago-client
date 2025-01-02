@@ -5,7 +5,7 @@
 
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
-@inject CustomStateProvider AuthStateProvider
+@* @inject CustomStateProvider AuthStateProvider *@
 @implements IErrorComponent
 
 <div class="bb-page">
@@ -101,15 +101,17 @@
         return _navItems;
     }
     
-    async Task LogoutClick()
+    void LogoutClick()
     {
-        await AuthStateProvider.Logout();
-        NavigationManager.NavigateTo(Rout.Login);
+        // await AuthStateProvider.Logout();
+        // NavigationManager.NavigateTo(Rout.Login);
+        // NavigationManager.NavigateTo(Rout.Login);
+        NavigationManager.NavigateTo(Rout.LogoutIdentity);
     }
     
     void LoginClick()
     {
-        NavigationManager.NavigateTo(Rout.Login);
+        NavigationManager.NavigateTo(Rout.LoginIdentity);
     }
 
     public void ShowError(string title, string message)
