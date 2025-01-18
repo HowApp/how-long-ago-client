@@ -10,8 +10,8 @@ public static class Rout
     
     
     public static string Login => "/login";
-    public static string LoginIdentity => "authentication/login";
-    public static string LogoutIdentity => "authentication/logout";
+    public static string LoginIdentity => "/authentication/login";
+    public static string LogoutIdentity => "/authentication/logout";
     public static string Registration => "/registration";
     
     public static class Home

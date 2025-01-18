@@ -1,14 +1,11 @@
 namespace HowClient.Extensions;
 
 using Configuration;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Options;
 using Services.Auth;
-using Services.CookieHandler;
 using Services.InternalNotification;
 using Services.Private.Event;
 using Services.Private.Record;
-using Services.Provider;
 using Services.Public.Event;
 using Services.Public.Record;
 
@@ -25,10 +22,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddCustomServices(this IServiceCollection services)
     {
-        // services.AddScoped<CookieHandler>();
-        // services.AddScoped<CustomStateProvider>();
-        // services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredService<CustomStateProvider>());
-        // services.AddScoped<IAuthServices, AuthServices>();
+        services.AddScoped<IAuthServices, AuthServices>();
         
         services.AddSingleton<InternalNotificationService>();
 

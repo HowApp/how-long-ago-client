@@ -1,11 +1,9 @@
-﻿@using HowClient.Services.Provider
-@using Microsoft.AspNetCore.Components.Authorization
+﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Components
 @using HowClient.Common.Routing
 
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
-@* @inject CustomStateProvider AuthStateProvider *@
 @implements IErrorComponent
 
 <div class="bb-page">
@@ -103,9 +101,6 @@
     
     void LogoutClick()
     {
-        // await AuthStateProvider.Logout();
-        // NavigationManager.NavigateTo(Rout.Login);
-        // NavigationManager.NavigateTo(Rout.Login);
         NavigationManager.NavigateTo(Rout.LogoutIdentity);
     }
     
