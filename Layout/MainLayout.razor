@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Components
 @using HowClient.Common.Routing
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
@@ -101,12 +102,12 @@
 
     void LogoutClick()
     {
-        NavigationManager.NavigateTo(Rout.LogoutIdentity);
+        NavigationManager.NavigateToLogout(Rout.LogoutIdentity);
     }
 
     void LoginClick()
     {
-        NavigationManager.NavigateTo(Rout.LoginIdentity);
+        NavigationManager.NavigateToLogin(Rout.LoginIdentity);
     }
 
     public void ShowError(string title, string message)
