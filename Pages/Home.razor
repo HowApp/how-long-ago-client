@@ -80,14 +80,14 @@
     private int _count = 0;
     private List<EventItemPublicModelDTO> _eventsToDisplay = new();
     private Dictionary<int, List<EventItemPublicModelDTO>> _loadedEvents = new();
-    
+
     private int _currentPageNumber = 1;
     private readonly int _pageSize = 5;
     private int _totalPage = 1;
     private string _searchQuery = string.Empty;
 
     private Timer _timer;
-    
+
     protected override async Task OnInitializedAsync()
     {
         if (AuthenticationState is not null)
@@ -151,10 +151,10 @@
             await LoadEvents();
             await GetCurrentPage();
         }
-        
+
         StateHasChanged();
     }
-    
+
     private async Task LoadEvents()
     {
         var result = await EventPublicService.GetEventsPagination(
@@ -169,18 +169,18 @@
         {
             eventItem.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.Image.MainHash);
             eventItem.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.Image.ThumbnailHash);
-            
+
             eventItem.UserInfo.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.MainHash);
             eventItem.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.ThumbnailHash);
 
             eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
         }
-        
+
         _count = result.Count;
         _totalPage = (int)Math.Ceiling((double)_count / _pageSize);
 
         _loadedEvents.TryAdd(_currentPageNumber, result.Events);
-        
+
         StateHasChanged();
     }
 

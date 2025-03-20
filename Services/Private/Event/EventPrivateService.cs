@@ -42,7 +42,7 @@ public class EventPrivateService : IEventPrivateService
             var url = QueryHelpers.AddQueryString(
                 $"api/dashboard/event/list-pagination/{ApiAccessHelper.GetAccess(accessFilter)}", 
                 queryParams);
-            
+
             var response = await _clientApi.GetAsync<ResultResponse<GetEventsPaginationPrivateResponseDTO>>(url);
 
             if (response.Failed)
@@ -50,14 +50,14 @@ public class EventPrivateService : IEventPrivateService
                 _notificationService.NotifyError(response.ToString());
                 return new GetEventsPaginationPrivateResponseDTO();
             }
-            
+
             return response.Data;
         }
         catch (HttpRequestException e)
         {
             Console.WriteLine($"Request failed: {e}");
         }
-        
+
         return new GetEventsPaginationPrivateResponseDTO();
     }
 
@@ -66,7 +66,7 @@ public class EventPrivateService : IEventPrivateService
         try
         {
             var url = $"api/dashboard/event/{eventId}/{ApiAccessHelper.GetAccess(ApiRequestAccessFilter.None)}";
-            
+
             var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdPrivateResponseDTO>>(url);
 
             if (response.Failed)
@@ -90,7 +90,7 @@ public class EventPrivateService : IEventPrivateService
         try
         {
             var url = $"api/dashboard/event/{eventId}/{ApiAccessHelper.GetAccess(accessFilter)}";
-            
+
             var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdPrivateResponseDTO>>(url);
 
             if (response.Failed)
@@ -193,7 +193,7 @@ public class EventPrivateService : IEventPrivateService
             {
                 _notificationService.NotifyError(response.ToString());
             }
-            
+
             return response.Succeeded;
         }
         catch (Exception e)

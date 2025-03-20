@@ -10,11 +10,11 @@ public class CustomAccountClaimsPrincipalFactory<TAccount> : AccountClaimsPrinci
     public CustomAccountClaimsPrincipalFactory(IAccessTokenProviderAccessor accessor) : base(accessor)
     {
     }
-    
+
     public override async ValueTask<ClaimsPrincipal> CreateUserAsync(TAccount account, RemoteAuthenticationUserOptions options)
     {
         var user = await base.CreateUserAsync(account, options);
-        
+
         if (!user.Identity!.IsAuthenticated)
         {
             return user;

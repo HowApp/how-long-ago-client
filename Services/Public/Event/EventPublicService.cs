@@ -27,23 +27,23 @@ public class EventPublicService : IEventPublicService
             {
                 queryParams.Add("search", request.Search);
             }
-            
+
             var url = QueryHelpers.AddQueryString("api/public/event/list-pagination", queryParams);
-            
+
             var response = await _clientApi.GetAsync<ResultResponse<GetEventsPaginationPublicResponseDTO>>(url);
-            
+
             if (response.Failed)
             {
                 return new GetEventsPaginationPublicResponseDTO();
             }
-            
+
             return response.Data;
         }
         catch (HttpRequestException e)
         {
             Console.WriteLine($"Request failed: {e}");
         }
-        
+
         return new GetEventsPaginationPublicResponseDTO();
     }
 
@@ -52,9 +52,9 @@ public class EventPublicService : IEventPublicService
         try
         {
             var url = $"api/public/event/{eventId}/details";
-            
+
             var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdResponseDTO>>(url);
-            
+
             return response.Data;
         }
         catch (Exception e)

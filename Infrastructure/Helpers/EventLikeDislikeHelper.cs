@@ -12,7 +12,7 @@ public class EventLikeDislikeHelper
     {
         likesCount = 0;
         dislikesCount = 0;
-        
+
         if (oldState == LikeState.None)
         {
             if (newState == LikeState.Like)

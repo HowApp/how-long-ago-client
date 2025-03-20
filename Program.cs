@@ -11,9 +11,9 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
-        
+
         builder.Services.SetupServices(builder.Configuration);
-        
+
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
@@ -27,10 +27,10 @@ public class Program
                     .ConfigureHandler(
                         authorizedUrls: new[] { builder.Configuration.GetValue<string>("AppConfigurations:BackendUrl") },
                         scopes: new[] { "scope.how-api" });
-        
+
                 return handler;
             });
-        
+
         builder.Services.AddHttpClient<AnonymousClientAPI>("how-api-client.unauthorized", client =>
         {
             client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppConfigurations:BackendUrl"));
@@ -43,14 +43,14 @@ public class Program
             {
                 BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppConfigurations:BackendUrl") ?? builder.HostEnvironment.BaseAddress)
             });
-        
+
         builder.Services.AddOidcAuthentication(options =>
         {
             builder.Configuration.Bind("oidc", options.ProviderOptions);
             options.UserOptions.RoleClaim = "role"; 
         })
         .AddAccountClaimsPrincipalFactory<CustomAccountClaimsPrincipalFactory<RemoteUserAccount>>();
-        
+
         await builder.Build().RunAsync();
     }
 }

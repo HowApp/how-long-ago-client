@@ -25,9 +25,9 @@ public class RecordPublicService : IRecordPublicService
             };
 
             var url = QueryHelpers.AddQueryString($"api/public/event/{eventId}/record/list-pagination", queryParams);
-            
+
             var response = await _anonymousClientApi.GetAsync<ResultResponse<GetRecordsPaginationResponseDTO>>(url);
-            
+
             return response.Data;
         }
         catch (Exception e)

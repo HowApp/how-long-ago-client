@@ -19,7 +19,7 @@
     public IEnumerable<(long id, string title, string message)> ErrorsToDisplay { get; set; }
     [Parameter] 
     public EventCallback<long> OnClickCallback { get; set; }
-    
+
     private async Task TriggerCallback(long id)
     {
         await OnClickCallback.InvokeAsync(id);

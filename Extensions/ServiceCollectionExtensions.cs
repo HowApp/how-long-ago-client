@@ -23,7 +23,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddCustomServices(this IServiceCollection services)
     {
         services.AddScoped<IAuthServices, AuthServices>();
-        
+
         services.AddSingleton<InternalNotificationService>();
 
         //Public
@@ -33,17 +33,17 @@ public static class ServiceCollectionExtensions
         // Private
         services.AddScoped<IEventPrivateService, EventPrivateService>();
         services.AddScoped<IRecordPrivateService, RecordPrivateService>();
-        
+
         return services;
     }
-    
+
     public static IServiceCollection AddConfigurations(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<AppConfigurations>(configuration.GetSection(nameof(AppConfigurations)));
-        
+
         services.AddSingleton(resolver =>
             resolver.GetRequiredService<IOptions<AppConfigurations>>().Value);
-        
+
         return services;
     }
 }

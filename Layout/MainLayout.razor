@@ -58,22 +58,22 @@
     Task<AuthenticationState>? AuthenticationState { get; set; }
 
     bool _isAuthorized;
-    
+
     private Sidebar _sidebar;
     IEnumerable<NavItem> _navItems;
-    
+
     private Offcanvas _offcanvas;
-    
+
     private Dictionary<long, (string title, string message)> _errors = new();
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        
+
         if (AuthenticationState is not null)
         {
             var user = (await AuthenticationState).User;
-        
+
             // Check if the user is authenticated
             _isAuthorized = user.Identity != null && user.Identity.IsAuthenticated;
         }
@@ -83,7 +83,7 @@
     {
         if (_navItems is null)
             _navItems = GetNavItems();
-        
+
         return await Task.FromResult(request.ApplyTo(_navItems));
     }
 
@@ -98,12 +98,12 @@
 
         return _navItems;
     }
-    
+
     void LogoutClick()
     {
         NavigationManager.NavigateTo(Rout.LogoutIdentity);
     }
-    
+
     void LoginClick()
     {
         NavigationManager.NavigateTo(Rout.LoginIdentity);

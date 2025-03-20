@@ -8,7 +8,7 @@ using ResultType;
 public class AuthServices : IAuthServices
 {
     private readonly AuthorizedClientAPI _authorizedClientApi;
-    
+
     public AuthServices(AuthorizedClientAPI authorizedClientApi)
     {
         _authorizedClientApi = authorizedClientApi;
