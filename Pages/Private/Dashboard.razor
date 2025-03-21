@@ -19,6 +19,13 @@
 
 <br/>
 <div class="d-flex gap-2 mb-8">
+    <Dropdown Color="DropdownColor.Primary" Direction="DropdownDirection.DropdownCentered">
+        <DropdownToggleButton>@AccessFilter</DropdownToggleButton>
+        <DropdownMenu>
+            <DropdownItem @onclick="() => AccessFilter = ApiRequestAccessFilter.Own" Type="DropdownItemType.Link">Own</DropdownItem>
+            <DropdownItem @onclick="() => AccessFilter = ApiRequestAccessFilter.Shared" Type="DropdownItemType.Link">Shared</DropdownItem>
+        </DropdownMenu>
+    </Dropdown>
     <Dropdown Color="DropdownColor.Dark" Direction="DropdownDirection.DropdownCentered">
         <DropdownToggleButton>@Status</DropdownToggleButton>
         <DropdownMenu>
@@ -105,9 +112,10 @@
 
     [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
-    
+
     private EventStatus Status { get; set; } = EventStatus.None;
     private EventAccessType AccessType { get; set; } = EventAccessType.None;
+    private ApiRequestAccessFilter AccessFilter { get; set; } = ApiRequestAccessFilter.Own;
 
     private int _count = 0;
     private List<EventItemPrivateModelDTO> _eventsToDisplay = new();
@@ -201,7 +209,8 @@
                 Search = _searchQuery,
                 Status = Status,
                 Access = AccessType
-            });
+            },
+            AccessFilter);
 
         foreach (var eventItem in result.Events)
         {
@@ -235,14 +244,14 @@
         eventItemPrivate.Access = eventItemPrivate.AccessToggle ? EventAccessType.Public : EventAccessType.Private;
         EventPrivateService.UpdateEventAccessState(eventItemPrivate.Id, eventItemPrivate.AccessToggle);
     }
-    
+
     private void OnStatusToggleChanged(EventItemPrivateModelDTO eventItemPrivate)
     {
         eventItemPrivate.StatusToggle = !eventItemPrivate.StatusToggle;
         eventItemPrivate.Status = eventItemPrivate.StatusToggle ? EventStatus.Active : EventStatus.Inactive;
         EventPrivateService.UpdateEventActiveState(eventItemPrivate.Id, eventItemPrivate.StatusToggle);
     }
-    
+
     private void HandleError(string message)
     {
         ErrorComponent.ShowError("Error!", message);

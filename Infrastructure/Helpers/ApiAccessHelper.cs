@@ -9,8 +9,8 @@ public class ApiAccessHelper
         return filter switch
         {
             ApiRequestAccessFilter.None => "public-active",
-            ApiRequestAccessFilter.IncludeCreatedBy => "own",
-            ApiRequestAccessFilter.IncludeShared => "shared",
+            ApiRequestAccessFilter.Own => "own",
+            ApiRequestAccessFilter.Shared => "shared",
             _ => string.Empty
         };
     }

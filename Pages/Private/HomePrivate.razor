@@ -109,21 +109,21 @@
 
     [CascadingParameter]
     Task<AuthenticationState> AuthenticationState { get; set; }
-    
+
     [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
 
     private int _count = 0;
     private List<EventItemPrivateModelDTO> _eventsToDisplay = new();
     private Dictionary<int, List<EventItemPrivateModelDTO>> _loadedEvents = new();
-    
+
     private int _currentPageNumber = 1;
     private readonly int _pageSize = 5;
     private int _totalPage = 1;
     private string _searchQuery = string.Empty;
 
     private Timer _timer;
-    
+
     protected override async Task OnInitializedAsync()
     {
         if (AuthenticationState is not null)
@@ -149,7 +149,7 @@
         _timer.Start();
 
         InternalNotificationService.OnError += HandleError;
-        
+
         await OnPageChangedAsync(_currentPageNumber);
     }
 
@@ -193,10 +193,10 @@
             await LoadEvents();
             await GetCurrentPage();
         }
-        
+
         StateHasChanged();
     }
-    
+
     private async Task LoadEvents()
     {
         var result = await EventPrivateService.GetEventsPagination(
@@ -213,18 +213,18 @@
         {
             eventItem.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.Image.MainHash);
             eventItem.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.Image.ThumbnailHash);
-            
+
             eventItem.UserInfo.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.MainHash);
             eventItem.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.ThumbnailHash);
 
             eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
         }
-        
+
         _count = result.Count;
         _totalPage = (int)Math.Ceiling((double)_count / _pageSize);
 
         _loadedEvents.TryAdd(_currentPageNumber, result.Events);
-        
+
         StateHasChanged();
     }
 
@@ -235,7 +235,7 @@
         {
             var oldValue = eventItem.IsSavedByUser;
             var success = false;
-            
+
             if (eventItem.IsSavedByUser)
             {
                 success = await EventPrivateService.DeleteEventFromSaved(eventItem.Id);
@@ -255,10 +255,10 @@
         {
             eventItem.ButtonSavedDisable = false;
         }
-        
+
         await Task.Delay(400);
     }
-    
+
     private async Task ChangeLikeEventState(EventItemPrivateModelDTO eventItem)
     {
         eventItem.ButtonDislikeDisable = true;
@@ -275,7 +275,7 @@
             eventItem.ButtonLikeDisable = false;
         }
     }
-    
+
     private async Task ChangeDislikeEventState(EventItemPrivateModelDTO eventItem)
     {
         eventItem.ButtonDislikeDisable = true;
@@ -296,7 +296,7 @@
     private async Task UpdateLikeState(EventItemPrivateModelDTO eventItem, LikeState state)
     {
         var oldState = eventItem.OwnLikeState;
-        
+
         eventItem.OwnLikeState = await EventPrivateService.UpdateEventLikeState(eventItem.Id, state);
 
         if (oldState == eventItem.OwnLikeState)
@@ -304,7 +304,7 @@
             await Task.Delay(1500);
             return;
         }
-        
+
         EventLikeDislikeHelper.CountLikeDislike(oldState, eventItem.OwnLikeState, out int likes, out int dislikes);
 
         eventItem.Likes += likes;
@@ -317,7 +317,7 @@
     {
         NavigationManager.NavigateTo(Rout.Event.EventPrivatePage(eventId));
     }
-    
+
     private void HandleError(string message)
     {
         ErrorComponent.ShowError("Error!", message);
