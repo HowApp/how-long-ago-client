@@ -1,0 +1,70 @@
+@using System.ComponentModel.DataAnnotations
+<style>
+    .valid.modified:not([type=checkbox]) {
+        outline: 1px solid #26b050;
+    }
+
+    .invalid {
+        outline: 1px solid red;
+    }
+
+    .validation-message {
+        color: red;
+    }
+</style>
+
+<EditForm EditContext="@_editContext" OnValidSubmit="HandleOnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Event Name: <span class="text-danger">*</span></label>
+        <div class="col-md-10">
+            <TextInput @bind-Value="@_model.EventName" Placeholder="Enter first name" />
+            <ValidationMessage For="@(() => _model.EventName)" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 text-right">
+            <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="ResetForm">Reset</Button>
+            <Button Type="ButtonType.Submit" Color="ButtonColor.Success" Class="float-end me-2">Submit</Button>
+        </div>
+    </div>
+
+</EditForm>
+@code {
+    private NewEventModel _model = new NewEventModel();
+
+    private EditContext _editContext;
+
+    [Parameter]
+    public EventCallback<string> OnClickCallback { get; set; }
+
+    public void HandleOnValidSubmit()
+    {
+        if (_editContext.Validate())
+        {
+            OnClickCallback.InvokeAsync(_model.EventName);
+        }
+    }
+
+    private void ResetForm()
+    {
+        _model.EventName = string.Empty;
+        _editContext = new EditContext(_model);
+    }
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+
+        base.OnInitialized();
+    }
+
+    private class NewEventModel
+    {
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Name required.")]
+        [DisplayFormat(ConvertEmptyStringToNull=false)]
+        public string EventName { get; set; } = string.Empty;
+    }
+}

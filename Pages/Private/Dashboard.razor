@@ -10,12 +10,14 @@
 @using HowClient.Infrastructure.Enums
 @using Components
 @using HowClient.Common.Routing
+@using HowClient.Components.Modals
 
 @inject IEventPrivateService EventPrivateService
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
 @inject InternalNotificationService InternalNotificationService
 
+<Modal @ref="_modal" Size="ModalSize.Large"></Modal>
 
 <br/>
 <div class="d-flex gap-2 mb-8">
@@ -46,6 +48,7 @@
         <InputText class="form-control" placeholder="Search items..." @bind-Value="_searchQuery"/>
     </div>
     <button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
+    <button class="btn btn-primary" @onclick="ShowCreateEventModal">Create new Event</button>
 </div>
 
 @if (_count > 0)
@@ -112,6 +115,8 @@
 
     [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
+
+    private Modal _modal = null!;
 
     private EventStatus Status { get; set; } = EventStatus.None;
     private EventAccessType AccessType { get; set; } = EventAccessType.None;
@@ -231,6 +236,19 @@
         _loadedEvents.TryAdd(_currentPageNumber, result.Events);
 
         StateHasChanged();
+    }
+
+    private async Task ShowCreateEventModal()
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("OnclickCallback", EventCallback.Factory.Create<string>(this, CreateEvent));
+        await _modal.ShowAsync<CreateEventModal>(title:"Create Event", parameters: parameters);
+    }
+
+    private async Task CreateEvent(string name)
+    {
+        await Task.Delay(200);
+        Console.WriteLine($"Processing event creating. Name: {name}");
     }
 
     private void NavigateToEventInfo(int eventId)

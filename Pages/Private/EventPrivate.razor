@@ -231,7 +231,7 @@
 
     private async Task LoadEventDetail()
     {
-        _event = await EventPrivateService.GetActivePublicEventById(EventId);
+        _event = await EventPrivateService.GetEventById(EventId);
 
         _event.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.MainHash);
         _event.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.ThumbnailHash);

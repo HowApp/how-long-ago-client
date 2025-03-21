@@ -8,10 +8,7 @@ public interface IEventPrivateService
     Task<GetEventsPaginationPrivateResponseDTO> GetEventsPagination(
         GetEventsPaginationPrivateRequestDTO request,
         ApiRequestAccessFilter accessFilter = ApiRequestAccessFilter.None);
-    Task<GetEventByIdPrivateResponseDTO> GetActivePublicEventById(int eventId);
-    Task<GetEventByIdPrivateResponseDTO> GetEventById(
-        int eventId,
-        ApiRequestAccessFilter accessFilter = ApiRequestAccessFilter.None);
+    Task<GetEventByIdPrivateResponseDTO> GetEventById(int eventId);
     Task UpdateEventAccessState(int eventId, bool setPublic);
     Task UpdateEventActiveState(int eventId, bool setActive);
     Task<LikeState> UpdateEventLikeState(int eventId, LikeState likeState);
