@@ -1,10 +1,12 @@
 namespace HowClient.Services.Private.Event;
 
+using System.Net.Http.Headers;
 using ClientAPI;
 using Infrastructure.DTO.Private.Event;
 using Infrastructure.Enums;
 using Infrastructure.Helpers;
 using InternalNotification;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.WebUtilities;
 using ResultType;
 
@@ -21,10 +23,37 @@ public class EventPrivateService : IEventPrivateService
         _notificationService = notificationService;
     }
 
+    public async Task<int> CreateEvent(string name)
+    {
+        var result = -1;
+        try
+        {
+            var response = await _clientApi.PostAsync<ResultResponse<int>, CreateUpdateEventPrivateRequestDTO>(
+                "/api/dashboard/event/create",
+                new CreateUpdateEventPrivateRequestDTO { Name = name });
+
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+            }
+            else
+            {
+                result = response.Data;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+        }
+
+        return result;
+    }
+
     public async Task<GetEventsPaginationPrivateResponseDTO> GetEventsPagination(
         GetEventsPaginationPrivateRequestDTO request,
         ApiRequestAccessFilter accessFilter = ApiRequestAccessFilter.None)
     {
+        var result = new GetEventsPaginationPrivateResponseDTO();
         try
         {
             var queryParams = new Dictionary<string, string>
@@ -48,17 +77,18 @@ public class EventPrivateService : IEventPrivateService
             if (response.Failed)
             {
                 _notificationService.NotifyError(response.ToString());
-                return new GetEventsPaginationPrivateResponseDTO();
             }
-
-            return response.Data;
+            else
+            {
+                result = response.Data;
+            }
         }
         catch (HttpRequestException e)
         {
             Console.WriteLine($"Request failed: {e}");
         }
 
-        return new GetEventsPaginationPrivateResponseDTO();
+        return result;
     }
 
     public async Task<GetEventByIdPrivateResponseDTO> GetEventById(int eventId)
@@ -82,6 +112,79 @@ public class EventPrivateService : IEventPrivateService
         }
 
         return new GetEventByIdPrivateResponseDTO();
+    }
+
+    public async Task<bool> UploadImage(int eventId, IBrowserFile file)
+    {
+        long maxFileSize = 10 * 1024 * 1024;
+        var upload = false;
+        using var requestContent = new MultipartFormDataContent();
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(memoryStream);
+            var fileContent = new ByteArrayContent(memoryStream.ToArray());
+
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+
+            requestContent.Add(
+                content: fileContent,
+                name: "\"File\"",
+                fileName: file.Name);
+
+            upload = true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("{FileName} not uploaded (Err: 6): {Message}", file.Name, e.Message);
+            return false;
+        }
+
+        if (upload)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/dashboard/event/{eventId}/image");
+
+            request.Content = requestContent;
+
+            var response = await _clientApi.SendRequest<ResultResponse>(request);
+
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<bool> UpdateEvent(int eventId, string name)
+    {
+        try
+        {
+            var response = await _clientApi.PatchAsync<ResultResponse, CreateUpdateEventPrivateRequestDTO>(
+                $"api/dashboard/event/{eventId}/update",
+                new CreateUpdateEventPrivateRequestDTO
+                {
+                    Name = name
+                });
+
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+            }
+            else
+            {
+                return true;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+        }
+
+        return false;
     }
 
     public async Task UpdateEventAccessState(int eventId, bool setPublic)

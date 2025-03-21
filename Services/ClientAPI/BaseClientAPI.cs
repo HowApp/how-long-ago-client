@@ -12,6 +12,12 @@ public abstract class BaseClientAPI
         _httpClient = httpClient;
     }
 
+    protected async Task<TReturn> SendRequest<TReturn>(HttpRequestMessage request)
+    {
+        var response = await _httpClient.SendAsync(request);
+        return await ProcessHttpResponse<TReturn>(response);
+    }
+
     protected async Task<TReturn> GetAsync<TReturn>(string uri)
     {
         var response = await _httpClient.GetAsync(uri);

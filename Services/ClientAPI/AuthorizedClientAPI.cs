@@ -6,6 +6,9 @@ public sealed class AuthorizedClientAPI : BaseClientAPI
     {
     }
 
+    internal new async Task<TReturn> SendRequest<TReturn>(HttpRequestMessage request) => 
+        await base.SendRequest<TReturn>(request);
+
     internal new async Task<TReturn> GetAsync<TReturn>(string uri) => 
         await base.GetAsync<TReturn>(uri);
 

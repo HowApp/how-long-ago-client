@@ -3,6 +3,7 @@
 @using System.Timers
 @using HowClient.Common.Routing
 @using HowClient.Components
+@using HowClient.Components.Modals
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
 @using HowClient.Infrastructure.DTO.Private.Record
@@ -21,11 +22,17 @@
 
 <h3>DashboardEvent</h3>
 
+<Modal @ref="_modal" Size="ModalSize.Large"></Modal>
+
 @if (_event is not null)
 {
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">Event Name: @_event.Name</h5>
+            <h5 class="card-title">Event Name: @_event.Name
+                <button type="button" class="btn btn-link ml-md-auto" @onclick="ShowUpdateEventModal">
+                    <Badge Color="BadgeColor.Dark"><Icon Name="IconName.Pencil"/></Badge>
+                </button>
+            </h5>
         </div>
         <div class="row" >
             <div class="col-md-4">
@@ -48,6 +55,8 @@
             <div class="col-md-4">
                 <div class="card-body">
                     <img src=@_event.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
+                    <Badge Color="BadgeColor.Dark">Upload image<Icon Name="IconName.Image"/></Badge>
+                    <InputFile OnChange="UploadImage"></InputFile>
                 </div>
             </div>
             <div class="col-md-4">
@@ -124,6 +133,8 @@
 
     [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
+
+    private Modal _modal = null!;
 
     private int _count = 0;
     private EventItemPrivateModelDTO _event;
@@ -235,6 +246,36 @@
         _event.Duration = DateTime.Now - _event.CreatedAt;
         _event.AccessToggle = _event.Access == EventAccessType.Public;
         _event.StatusToggle = _event.Status == EventStatus.Active;
+    }
+
+    private async Task ShowUpdateEventModal()
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("Name", _event.Name);
+        parameters.Add("OnclickCallback", EventCallback.Factory.Create<string>(this, UpdateEvent));
+        await _modal.ShowAsync<CreateUpdateEventModal>(title:"Update Event", parameters: parameters);
+    }
+
+    private async Task UpdateEvent(string name)
+    {
+        await _modal.HideAsync();
+        var result = await EventPrivateService.UpdateEvent(_event.Id, name);
+
+        if (result)
+        {
+            _event.Name = name;
+        }
+    }
+
+    private async Task UploadImage(InputFileChangeEventArgs e)
+    {
+        Console.WriteLine("Start uploading file");
+        var maxAllowedFiles = 1;
+
+        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
+        {
+            await EventPrivateService.UploadImage(_event.Id, file);
+        }
     }
 
     private void OnAccessToggleChanged()

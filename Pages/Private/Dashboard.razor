@@ -242,13 +242,18 @@
     {
         var parameters = new Dictionary<string, object>();
         parameters.Add("OnclickCallback", EventCallback.Factory.Create<string>(this, CreateEvent));
-        await _modal.ShowAsync<CreateEventModal>(title:"Create Event", parameters: parameters);
+        await _modal.ShowAsync<CreateUpdateEventModal>(title:"Create Event", parameters: parameters);
     }
 
     private async Task CreateEvent(string name)
     {
-        await Task.Delay(200);
-        Console.WriteLine($"Processing event creating. Name: {name}");
+        await _modal.HideAsync();
+        var result = await EventPrivateService.CreateEvent(name);
+
+        if (result > 0)
+        {
+            await ReloadEvents();
+        }
     }
 
     private void NavigateToEventInfo(int eventId)
