@@ -20,19 +20,26 @@
 @inject NavigationManager NavigationManager
 @inject InternalNotificationService InternalNotificationService
 
-<h3>DashboardEvent</h3>
+<div class="d-flex gap-2 mb-8 m-2">
+    <button class="btn btn-primary" @onclick="LoadEventDetail">Reload Event</button>
+</div>
 
-<Modal @ref="_modal" Size="ModalSize.Large"></Modal>
+<Modal @ref="_createEventModal" Size="ModalSize.Large"></Modal>
+<Modal @ref="_uploadImageModal" Size="ModalSize.Large"></Modal>
 
 @if (_event is not null)
 {
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">Event Name: @_event.Name
-                <button type="button" class="btn btn-link ml-md-auto" @onclick="ShowUpdateEventModal">
+            <div class="row">
+                <h5 class="card-title col-md-10">Event Name: @_event.Name</h5>
+                <button type="button" class="btn btn-link ms-auto col-md-1" @onclick="ShowUpdateEventModal">
                     <Badge Color="BadgeColor.Dark"><Icon Name="IconName.Pencil"/></Badge>
                 </button>
-            </h5>
+                <button type="button" class="btn btn-link ms-auto col-md-1" @onclick="DeleteEvent">
+                    <Badge Color="BadgeColor.Dark"><Icon Name="IconName.Trash"/></Badge>
+                </button>
+            </div>
         </div>
         <div class="row" >
             <div class="col-md-4">
@@ -53,10 +60,12 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card-body">
+                <div class="card-body text-center">
                     <img src=@_event.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
-                    <Badge Color="BadgeColor.Dark">Upload image<Icon Name="IconName.Image"/></Badge>
-                    <InputFile OnChange="UploadImage"></InputFile>
+                    <button type="button" class="btn btn-outline-dark m-2" @onclick="ShowUploadImageModal">
+                        <a>Upload Image</a>
+                        <Badge Color="BadgeColor.Dark"><Icon Name="IconName.ImageFill"/></Badge>
+                    </button>
                 </div>
             </div>
             <div class="col-md-4">
@@ -134,7 +143,10 @@
     [CascadingParameter(Name = "ErrorComponent")]
     protected IErrorComponent ErrorComponent { get; set; }
 
-    private Modal _modal = null!;
+    [Inject] ToastService ToastService { get; set; } = default!;
+
+    private Modal _createEventModal = null!;
+    private Modal _uploadImageModal = null!;
 
     private int _count = 0;
     private EventItemPrivateModelDTO _event;
@@ -253,12 +265,20 @@
         var parameters = new Dictionary<string, object>();
         parameters.Add("Name", _event.Name);
         parameters.Add("OnclickCallback", EventCallback.Factory.Create<string>(this, UpdateEvent));
-        await _modal.ShowAsync<CreateUpdateEventModal>(title:"Update Event", parameters: parameters);
+        await _createEventModal.ShowAsync<CreateUpdateEventModal>(title:"Update Event", parameters: parameters);
+    }
+
+    private async Task ShowUploadImageModal()
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("EventId", _event.Id);
+        parameters.Add("OnclickCallback", EventCallback.Factory.Create<InputFileChangeEventArgs>(this, UploadImage));
+        await _uploadImageModal.ShowAsync<UploadImageModal>(title: "Upload Image", parameters: parameters);
     }
 
     private async Task UpdateEvent(string name)
     {
-        await _modal.HideAsync();
+        await _createEventModal.HideAsync();
         var result = await EventPrivateService.UpdateEvent(_event.Id, name);
 
         if (result)
@@ -274,7 +294,19 @@
 
         foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
         {
-            await EventPrivateService.UploadImage(_event.Id, file);
+            var result = await EventPrivateService.UploadImage(EventId, file);
+            OnImageProcessing(result);
+        }
+        await _uploadImageModal.HideAsync();
+    }
+
+    private async Task DeleteEvent()
+    {
+        var result = await EventPrivateService.DeleteEvent(_event.Id);
+
+        if (result)
+        {
+            NavigationManager.NavigateTo(Rout.Dashboard.MainDashboard);
         }
     }
 
@@ -295,5 +327,17 @@
     private void HandleError(string message)
     {
         ErrorComponent.ShowError("Error!", message);
+    }
+
+    private void OnImageProcessing(bool marker)
+    {
+        if (marker)
+        {
+            ToastService.Notify(new (ToastType.Success, $"Image start processing: {DateTime.Now}"));
+        }
+        else
+        {
+            ToastService.Notify(new (ToastType.Warning, $"Image failed processing: {DateTime.Now}"));
+        }
     }
 }

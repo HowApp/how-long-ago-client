@@ -54,6 +54,7 @@
 
 </div>
 
+<Toasts class="p-3" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight" />
 @code {
     [CascadingParameter]
     Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -93,7 +94,7 @@
         _navItems = new List<NavItem>
         {
             new NavItem { Id = "1", Href = _isAuthorized ? Rout.Home.HomePrivatePage : Rout.Home.HomePublicPage, IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
-            new NavItem { Id = "2", Href = Rout.Dashboard.PrivatePage, IconName = IconName.Database, Text = "Dashboard"},
+            new NavItem { Id = "2", Href = Rout.Dashboard.MainDashboard, IconName = IconName.Database, Text = "Dashboard"},
             new NavItem { Id = "3", Href = "/hub-test", IconName = IconName.Github, Text = "HubTest"}
         };
 

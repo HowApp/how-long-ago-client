@@ -61,7 +61,12 @@
     {
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title">Event Name: @item.Name</h5>
+                <div class="row">
+                    <h5 class="card-title col-md-11">Event Name: @item.Name</h5>
+                    <button type="button" class="btn btn-link ms-auto col-md-1" @onclick="() => DeleteEvent(item.Id)">
+                        <Badge Color="BadgeColor.Dark"><Icon Name="IconName.Trash"/></Badge>
+                    </button>
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-4">
@@ -251,6 +256,16 @@
         var result = await EventPrivateService.CreateEvent(name);
 
         if (result > 0)
+        {
+            await ReloadEvents();
+        }
+    }
+
+    private async Task DeleteEvent(int id)
+    {
+        var result = await EventPrivateService.DeleteEvent(id);
+
+        if (result)
         {
             await ReloadEvents();
         }

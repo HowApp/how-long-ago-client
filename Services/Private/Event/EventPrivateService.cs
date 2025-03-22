@@ -122,7 +122,7 @@ public class EventPrivateService : IEventPrivateService
         try
         {
             using var memoryStream = new MemoryStream();
-            await file.OpenReadStream().CopyToAsync(memoryStream);
+            await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
             var fileContent = new ByteArrayContent(memoryStream.ToArray());
 
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
@@ -287,6 +287,25 @@ public class EventPrivateService : IEventPrivateService
         try
         {
             var response = await _clientApi.DeleteAsync<ResultResponse>($"api/dashboard/event/{eventId}/saved/delete");
+            if (response.Failed)
+            {
+                _notificationService.NotifyError(response.ToString());
+            }
+
+            return response.Succeeded;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Request failed: {e}");
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteEvent(int eventId)
+    {
+        try
+        {
+            var response = await _clientApi.DeleteAsync<ResultResponse>($"api/dashboard/event/{eventId}/delete");
             if (response.Failed)
             {
                 _notificationService.NotifyError(response.ToString());

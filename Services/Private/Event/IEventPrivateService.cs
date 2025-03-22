@@ -18,4 +18,5 @@ public interface IEventPrivateService
     Task<LikeState> UpdateEventLikeState(int eventId, LikeState likeState);
     Task<bool> AddEventToSaved(int eventId);
     Task<bool> DeleteEventFromSaved(int eventId);
+    Task<bool> DeleteEvent(int eventId);
 }
