@@ -435,6 +435,11 @@ else
         var result = await RecordPrivateService.UploadRecordImages(EventId, _selectedRecordIdForUpload, files);
         OnImageProcessing(result);
         await _uploadImageModal.HideAsync();
+        if (result)
+        {
+            await Task.Delay(1200);
+            await ReloadEventAndRecords();
+        }
     }
 
     private async Task UpdateEvent(string name)
@@ -452,13 +457,23 @@ else
     private async Task UploadImage(InputFileChangeEventArgs e)
     {
         var maxAllowedFiles = 1;
+        var uploaded = false;
 
         foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
         {
             var result = await EventPrivateService.UploadImage(EventId, file);
             OnImageProcessing(result);
+            if (result)
+            {
+                uploaded = true;
+            }
         }
         await _uploadImageModal.HideAsync();
+        if (uploaded)
+        {
+            await Task.Delay(1200);
+            await ReloadEventAndRecords();
+        }
     }
 
     private async Task DeleteEvent()

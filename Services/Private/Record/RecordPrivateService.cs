@@ -81,7 +81,7 @@ public class RecordPrivateService : IRecordPrivateService
     {
         try
         {
-            var response = await _clientApi.PutAsync<ResultResponse, CreateUpdateRecordPrivateRequestDTO>(
+            var response = await _clientApi.PatchAsync<ResultResponse, CreateUpdateRecordPrivateRequestDTO>(
                 $"api/dashboard/event/{eventId}/record/{recordId}/update",
                 new CreateUpdateRecordPrivateRequestDTO { Description = description });
 
@@ -128,11 +128,11 @@ public class RecordPrivateService : IRecordPrivateService
         {
             var queryParams = new Dictionary<string, string>
             {
-                { "likeState", ((int)likeState).ToString() }
+                { "request", ((int)likeState).ToString() }
             };
 
             var url = QueryHelpers.AddQueryString(
-                $"api/dashboard/event/{eventId}/record/{recordId}/like-state",
+                $"api/dashboard/event/{eventId}/record/{recordId}/like",
                 queryParams);
 
             var response = await _clientApi.PatchAsync<ResultResponse<LikeState>>(url);
@@ -174,7 +174,7 @@ public class RecordPrivateService : IRecordPrivateService
 
             var request = new HttpRequestMessage(
                 HttpMethod.Post,
-                $"api/dashboard/event/{eventId}/record/{recordId}/image/upload")
+                $"api/dashboard/event/{eventId}/record/{recordId}/image/create")
             {
                 Content = requestContent
             };
