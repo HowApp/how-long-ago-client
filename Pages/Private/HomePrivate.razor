@@ -94,7 +94,7 @@ else if (_count > 0)
                                         ? "Community Member"
                                         : $"{item.UserInfo.FirstName} {item.UserInfo.LastName}")
                                 </div>
-                                <div class="how-created-date">Started @item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                                <div class="how-created-date">Started @DurationFormatHelper.FormatLocalDateTime(item.CreatedAt)</div>
                             </div>
                         </div>
                     </div>
@@ -194,7 +194,7 @@ else
     {
         foreach (var eventItem in _eventsToDisplay)
         {
-            eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
+            eventItem.Duration = DurationFormatHelper.CalculateElapsed(eventItem.CreatedAt);
         }
 
         await InvokeAsync(StateHasChanged);
@@ -277,7 +277,7 @@ else
             eventItem.UserInfo.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.MainHash);
             eventItem.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, eventItem.UserInfo.Image.ThumbnailHash);
 
-            eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
+            eventItem.Duration = DurationFormatHelper.CalculateElapsed(eventItem.CreatedAt);
         }
 
         _count = result.Count;

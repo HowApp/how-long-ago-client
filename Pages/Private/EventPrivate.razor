@@ -40,7 +40,7 @@
                         <span class="how-pill-badge how-pill-public">
                             <Icon Name="IconName.Globe" /> Public Event
                         </span>
-                        <span class="text-muted small">Started @_event.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                        <span class="text-muted small">Started @DurationFormatHelper.FormatLocalDateTime(_event.CreatedAt)</span>
                     </div>
                     <h2 class="h4 fw-bold mb-3">@_event.Name</h2>
 
@@ -102,7 +102,7 @@
                 <div class="col-md-6">
                     <div class="d-flex align-items-center gap-2 text-muted small mb-2">
                         <Icon Name="IconName.CalendarEvent" />
-                        <span>@record.CreatedAt.ToString("MMM dd, yyyy HH:mm:ss")</span>
+                        <span>@DurationFormatHelper.FormatLocalDateTime(record.CreatedAt, "MMM dd, yyyy HH:mm:ss")</span>
                         <span class="badge bg-light text-secondary border">#@record.Id</span>
                     </div>
                     <p class="mb-3 fs-6">@record.Description</p>
@@ -202,7 +202,7 @@ else
     {
         if (_event is not null)
         {
-            _event.Duration = DateTime.Now - _event.CreatedAt;
+            _event.Duration = DurationFormatHelper.CalculateElapsed(_event.CreatedAt);
             await InvokeAsync(StateHasChanged);
         }
     }
@@ -276,7 +276,7 @@ else
         _event.UserInfo.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.UserInfo.Image.MainHash);
         _event.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.UserInfo.Image.ThumbnailHash);
 
-        _event.Duration = DateTime.Now - _event.CreatedAt;
+        _event.Duration = DurationFormatHelper.CalculateElapsed(_event.CreatedAt);
     }
 
     private async Task ChangeRecordLikeState(RecordItemPrivateModelDTO record, LikeState targetState)

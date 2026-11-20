@@ -101,7 +101,7 @@
                                     ? "Owner"
                                     : $"{_event.UserInfo.FirstName} {_event.UserInfo.LastName}")
                             </div>
-                            <div class="how-created-date">Created @_event.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                            <div class="how-created-date">Created @DurationFormatHelper.FormatLocalDateTime(_event.CreatedAt)</div>
                         </div>
                     </div>
 
@@ -132,7 +132,7 @@
                 <div class="d-flex align-items-center gap-2 text-muted small">
                     <span class="badge bg-primary-subtle text-primary fw-semibold">Record #@record.Id</span>
                     <Icon Name="IconName.CalendarEvent" />
-                    <span>@record.CreatedAt.ToString("MMM dd, yyyy HH:mm:ss")</span>
+                    <span>@DurationFormatHelper.FormatLocalDateTime(record.CreatedAt, "MMM dd, yyyy HH:mm:ss")</span>
                 </div>
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @onclick="() => ShowUploadRecordImagesModal(record.Id)">
@@ -257,7 +257,7 @@ else
     {
         if (_event is not null)
         {
-            _event.Duration = DateTime.Now - _event.CreatedAt;
+            _event.Duration = DurationFormatHelper.CalculateElapsed(_event.CreatedAt);
             await InvokeAsync(StateHasChanged);
         }
     }
@@ -338,7 +338,7 @@ else
         _event.UserInfo.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.UserInfo.Image.MainHash);
         _event.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.UserInfo.Image.ThumbnailHash);
 
-        _event.Duration = DateTime.Now - _event.CreatedAt;
+        _event.Duration = DurationFormatHelper.CalculateElapsed(_event.CreatedAt);
         _event.AccessToggle = _event.Access == EventAccessType.Public;
         _event.StatusToggle = _event.Status == EventStatus.Active;
     }
