@@ -1,23 +1,34 @@
-@if(ErrorsToDisplay.Any())
+@if (ErrorsToDisplay != null && ErrorsToDisplay.Any())
 {
-    foreach (var item in ErrorsToDisplay)
-    {
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <div class="flex-grow-1">
-                <h5 class="mb-1">@item.title</h5>
-                <p class="mb-0">@item.message</p>
+    <div class="d-flex flex-column gap-2">
+        @foreach (var item in ErrorsToDisplay)
+        {
+            <div class="alert alert-danger d-flex justify-content-between align-items-start mb-0 shadow-sm border-0">
+                <div class="flex-grow-1 pe-2">
+                    <div class="fw-bold mb-1 d-flex align-items-center gap-1">
+                        <Icon Name="IconName.ExclamationTriangleFill" />
+                        <span>@item.title</span>
+                    </div>
+                    <div class="small">@item.message</div>
+                </div>
+                <button type="button" class="btn-close" aria-label="Close" @onclick="() => TriggerCallback(item.id)"></button>
             </div>
-            <button type="button" class="btn btn-outline-danger btn-sm ms-2" aria-label="Close" @onclick="() => TriggerCallback(item.id)">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    }
+        }
+    </div>
+}
+else
+{
+    <div class="text-center text-muted py-5">
+        <div class="fs-2 mb-2"><Icon Name="IconName.CheckCircle" /></div>
+        <p class="mb-0">No active alerts or errors.</p>
+    </div>
 }
 
 @code {
     [Parameter]
     public IEnumerable<(long id, string title, string message)> ErrorsToDisplay { get; set; }
-    [Parameter] 
+
+    [Parameter]
     public EventCallback<long> OnClickCallback { get; set; }
 
     private async Task TriggerCallback(long id)

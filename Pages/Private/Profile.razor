@@ -17,85 +17,141 @@
 @inject ToastService ToastService
 @implements IDisposable
 
-<PageTitle>Profile & Shared Access</PageTitle>
+<PageTitle>Profile & Shared Access — How Long Ago</PageTitle>
 
 <Modal @ref="_uploadAvatarModal" Size="ModalSize.Large"></Modal>
 
-<div class="row">
-    <div class="col-md-5">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">My Profile</h5>
-            </div>
-            <div class="card-body">
+<div class="how-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div>
+        <h1 class="h3 fw-bold">Profile & Shared Access</h1>
+        <p class="subtitle">Customize your public author profile and manage collaborators who can view and log records on your events.</p>
+    </div>
+    <span class="badge bg-white text-dark px-3 py-2 rounded-pill fw-semibold">
+        <Icon Name="IconName.PeopleFill" /> @_sharedUsers.Count Collaborators
+    </span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                    <Icon Name="IconName.PersonBadgeFill" class="text-primary" /> Personal Details
+                </h5>
+
                 @if (_userInfo is not null)
                 {
-                    <div class="text-center mb-3">
-                        <img src="@_avatarUrl" class="rounded-circle d-block mx-auto mb-2" alt="Avatar" style="height: 120px; width: 120px; object-fit: cover;" />
-                        <button type="button" class="btn btn-sm btn-outline-dark" @onclick="ShowUploadAvatarModal">
-                            <Icon Name="IconName.ImageFill" /> Change Avatar
+                    <div class="text-center mb-4 p-3 bg-light rounded-4 border">
+                        <img src="@_avatarUrl" class="rounded-circle d-block mx-auto mb-3 shadow-sm border border-3 border-white" alt="Avatar" style="height: 112px; width: 112px; object-fit: cover;" />
+                        <div class="fw-bold">@(string.IsNullOrWhiteSpace($"{_firstName} {_lastName}") ? "Anonymous User" : $"{_firstName} {_lastName}")</div>
+                        <div class="text-muted small mb-3">User ID #@_userInfo.Id</div>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" @onclick="ShowUploadAvatarModal">
+                            <Icon Name="IconName.CameraFill" /> Upload New Avatar
                         </button>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">First Name</label>
-                        <InputText class="form-control" @bind-Value="_firstName" placeholder="First Name" />
+                        <label class="form-label fw-semibold small text-uppercase text-muted">First Name</label>
+                        <InputText class="form-control" @bind-Value="_firstName" placeholder="Enter your first name" />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Last Name</label>
-                        <InputText class="form-control" @bind-Value="_lastName" placeholder="Last Name" />
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small text-uppercase text-muted">Last Name</label>
+                        <InputText class="form-control" @bind-Value="_lastName" placeholder="Enter your last name" />
                     </div>
-                    <button class="btn btn-primary w-100" @onclick="SaveProfile">Save Profile</button>
+                    <button class="btn btn-primary w-100 rounded-pill py-2 fw-semibold" @onclick="SaveProfile">
+                        <Icon Name="IconName.Check2Circle" /> Save Profile Changes
+                    </button>
                 }
             </div>
         </div>
     </div>
 
-    <div class="col-md-7">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Shared Users (Who Can Access My Events)</h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex gap-2 mb-3">
-                    <InputText class="form-control" placeholder="Search users by name..." @bind-Value="_userSearchQuery" />
-                    <button class="btn btn-outline-primary" @onclick="SearchUsers">Search</button>
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-2 d-flex align-items-center gap-2">
+                    <Icon Name="IconName.ShareFill" class="text-primary" /> Shared Workspace Access
+                </h5>
+                <p class="text-muted small mb-4">
+                    Users added below can view your private events and contribute records to your timelines.
+                </p>
+
+                <div class="how-toolbar mb-4">
+                    <div class="how-search-box">
+                        <i class="bi bi-search"></i>
+                        <InputText class="form-control" placeholder="Search users by first or last name..." @bind-Value="_userSearchQuery" />
+                    </div>
+                    <button class="btn btn-primary px-4" @onclick="SearchUsers">
+                        <Icon Name="IconName.Search" /> Find Users
+                    </button>
                 </div>
 
                 @if (_searchResults.Any())
                 {
-                    <h6>Search Results</h6>
-                    <ul class="list-group mb-3">
-                        @foreach (var user in _searchResults)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>@user.FirstName @user.LastName (ID: @user.Id)</span>
-                                <button class="btn btn-sm btn-success" @onclick="() => AddSharedUser(user.Id)">
-                                    Share Access
-                                </button>
-                            </li>
-                        }
-                    </ul>
+                    <div class="mb-4">
+                        <h6 class="fw-bold small text-uppercase text-muted mb-2">Search Results (@_searchResults.Count)</h6>
+                        <div class="list-group rounded-3 shadow-sm">
+                            @foreach (var user in _searchResults)
+                            {
+                                var alreadyShared = _sharedUsers.Any(s => s.Id == user.Id);
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, user.Image?.ThumbnailHash ?? string.Empty)"
+                                             class="how-avatar-sm"
+                                             alt="User Avatar" />
+                                        <div>
+                                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace($"{user.FirstName} {user.LastName}") ? $"User #{user.Id}" : $"{user.FirstName} {user.LastName}")</div>
+                                            <div class="text-muted small">ID: #@user.Id</div>
+                                        </div>
+                                    </div>
+                                    @if (alreadyShared)
+                                    {
+                                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+                                            <Icon Name="IconName.CheckLg" /> Shared
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3" @onclick="() => AddSharedUser(user.Id)">
+                                            <Icon Name="IconName.PersonPlusFill" /> Grant Access
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
                 }
 
-                <h6>Currently Shared With</h6>
+                <h6 class="fw-bold small text-uppercase text-muted mb-2">Active Collaborators (@_sharedUsers.Count)</h6>
                 @if (_sharedUsers.Any())
                 {
-                    <ul class="list-group">
+                    <div class="list-group rounded-3 shadow-sm">
                         @foreach (var sharedUser in _sharedUsers)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>@sharedUser.FirstName @sharedUser.LastName (ID: @sharedUser.Id)</span>
-                                <button class="btn btn-sm btn-danger" @onclick="() => RemoveSharedUser(sharedUser.Id)">
-                                    <Icon Name="IconName.Trash" /> Remove
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, sharedUser.Image?.ThumbnailHash ?? string.Empty)"
+                                         class="how-avatar-sm"
+                                         alt="Collaborator Avatar" />
+                                    <div>
+                                        <div class="fw-semibold">@(string.IsNullOrWhiteSpace($"{sharedUser.FirstName} {sharedUser.LastName}") ? $"User #{sharedUser.Id}" : $"{sharedUser.FirstName} {sharedUser.LastName}")</div>
+                                        <div class="text-muted small">Collaborator ID: #@sharedUser.Id</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3" @onclick="() => RemoveSharedUser(sharedUser.Id)">
+                                    <Icon Name="IconName.PersonDashFill" /> Revoke
                                 </button>
-                            </li>
+                            </div>
                         }
-                    </ul>
+                    </div>
                 }
                 else
                 {
-                    <p class="text-muted">You haven't shared access with any users yet.</p>
+                    <div class="how-empty-state py-4 my-2">
+                        <div class="how-empty-icon fs-2"><Icon Name="IconName.People" /></div>
+                        <h6 class="fw-bold mb-1">No active collaborators</h6>
+                        <p class="text-muted small mb-0">Search for a user above to share access to your events.</p>
+                    </div>
                 }
             </div>
         </div>

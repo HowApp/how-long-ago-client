@@ -1,5 +1,4 @@
 @page "/authorized/dashboard/event/{EventId:int:min(1)}/record"
-
 @using System.Timers
 @using HowClient.Common.Routing
 @using HowClient.Components
@@ -21,64 +20,95 @@
 @inject InternalNotificationService InternalNotificationService
 @implements IDisposable
 
-<div class="d-flex gap-2 mb-8 m-2">
-    <button class="btn btn-primary" @onclick="ReloadEventAndRecords">Reload Event</button>
-    <button class="btn btn-success" @onclick="ShowCreateRecordModal">Add Record</button>
-</div>
+<PageTitle>Manage @(_event?.Name ?? "Event") — How Long Ago</PageTitle>
 
 <Modal @ref="_createEventModal" Size="ModalSize.Large"></Modal>
 <Modal @ref="_uploadImageModal" Size="ModalSize.Large"></Modal>
 <Modal @ref="_recordModal" Size="ModalSize.Large"></Modal>
 
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" @onclick="() => NavigationManager.NavigateTo(Rout.Dashboard.MainDashboard)">
+        <Icon Name="IconName.ArrowLeft" /> Back to Dashboard
+    </button>
+    <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" @onclick="ReloadEventAndRecords">
+            <Icon Name="IconName.ArrowClockwise" /> Refresh
+        </button>
+        <button class="btn btn-sm btn-primary rounded-pill px-3" @onclick="ShowCreateRecordModal">
+            <Icon Name="IconName.PlusLg" /> Add Occurrence Record
+        </button>
+    </div>
+</div>
+
 @if (_event is not null)
 {
-    <div class="card">
-        <div class="card-header">
-            <div class="row">
-                <h5 class="card-title col-md-10">Event Name: @_event.Name</h5>
-                <button type="button" class="btn btn-link ms-auto col-md-1" @onclick="ShowUpdateEventModal">
-                    <Badge Color="BadgeColor.Dark"><Icon Name="IconName.Pencil"/></Badge>
-                </button>
-                <button type="button" class="btn btn-link ms-auto col-md-1" @onclick="DeleteEvent">
-                    <Badge Color="BadgeColor.Dark"><Icon Name="IconName.Trash"/></Badge>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="row g-0">
+            <div class="col-md-5 bg-light d-flex flex-column align-items-center justify-content-center p-3 position-relative">
+                <img src="@_event.Image.ThumbnailHash" class="rounded-3 img-fluid shadow-sm mb-3" alt="@_event.Name" style="max-height: 230px; object-fit: cover;" />
+                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @onclick="ShowUploadImageModal">
+                    <Icon Name="IconName.CameraFill" /> Change Event Cover
                 </button>
             </div>
-        </div>
-        <div class="row" >
-            <div class="col-md-4">
-                <div class="card-body">
-                    <p class="card-text">Created At: @_event.CreatedAt</p>
-                    <p class="card-text">Access: @_event.Access</p>
-                    <div class="mb-3">
-                        <Switch @onclick="async () => await OnAccessToggleChanged()" Value="_event.AccessToggle" ValueExpression="() => _event.AccessToggle" Label="Set public"/>
+
+            <div class="col-md-7 p-4 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <div class="d-flex gap-1">
+                            <span class="how-pill-badge @(_event.Access == EventAccessType.Public ? "how-pill-public" : "how-pill-private")">
+                                <Icon Name="@(_event.Access == EventAccessType.Public ? IconName.Globe : IconName.LockFill)" />
+                                @_event.Access
+                            </span>
+                            <span class="how-pill-badge @(_event.Status == EventStatus.Active ? "how-pill-active" : "how-pill-inactive")">
+                                @_event.Status
+                            </span>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" @onclick="ShowUpdateEventModal">
+                                <Icon Name="IconName.PencilFill" /> Rename
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" @onclick="DeleteEvent">
+                                <Icon Name="IconName.TrashFill" /> Delete
+                            </button>
+                        </div>
                     </div>
-                    <p class="card-text">Status: @_event.Status</p>
-                    <div class="mb-3">
-                        <Switch @onclick="async () => await OnStatusToggleChanged()" Value="_event.StatusToggle" ValueExpression="() => _event.StatusToggle" Label="Set active"/>
+
+                    <h2 class="h4 fw-bold mb-3">@_event.Name</h2>
+
+                    <div class="how-timer-box mb-3">
+                        <div class="how-timer-label">Live Elapsed Time Since Event</div>
+                        <div class="how-timer-value fs-3">@DurationFormatHelper.FormatHumanReadable(_event.Duration)</div>
                     </div>
-                    <p class="card-text">Likes: @_event.Likes</p>
-                    <p class="card-text">Dislikes: @_event.Dislikes</p>
-                    <p class="card-text">Saved: @_event.SavedCount</p>
-                    <p>Was @_event.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
+
+                    <div class="d-flex flex-wrap gap-4 bg-light rounded-3 px-3 py-2 border mb-3">
+                        <Switch @onclick="async () => await OnAccessToggleChanged()"
+                                Value="_event.AccessToggle"
+                                ValueExpression="() => _event.AccessToggle"
+                                Label="Public Visibility" />
+                        <Switch @onclick="async () => await OnStatusToggleChanged()"
+                                Value="_event.StatusToggle"
+                                ValueExpression="() => _event.StatusToggle"
+                                Label="Active Status" />
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card-body text-center">
-                    <img src=@_event.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
-                    <button type="button" class="btn btn-outline-dark m-2" @onclick="ShowUploadImageModal">
-                        <a>Upload Image</a>
-                        <Badge Color="BadgeColor.Dark"><Icon Name="IconName.ImageFill"/></Badge>
-                    </button>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card-body">
-                    <div class="card-text">
-                        <p class="card-text">Author</p>
-                        <p class="card-text">Name: @_event.UserInfo.FirstName @_event.UserInfo.LastName</p>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center pt-3 border-top gap-2">
+                    <div class="how-author-info">
+                        <img src="@_event.UserInfo.Image.ThumbnailHash" class="how-avatar-sm" alt="Author" />
+                        <div>
+                            <div class="how-author-name">
+                                @(string.IsNullOrWhiteSpace($"{_event.UserInfo.FirstName} {_event.UserInfo.LastName}")
+                                    ? "Owner"
+                                    : $"{_event.UserInfo.FirstName} {_event.UserInfo.LastName}")
+                            </div>
+                            <div class="how-created-date">Created @_event.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                        </div>
                     </div>
-                    <div class="card-img-top">
-                        <img src=@_event.UserInfo.Image.ThumbnailHash class="rounded float-md-none" alt="Author Image" IsThumbnail="true" style="height: 100px">
+
+                    <div class="how-reactions">
+                        <span class="how-reaction-btn"><Icon Name="IconName.HeartFill" class="text-danger" /> @_event.Likes</span>
+                        <span class="how-reaction-btn"><Icon Name="IconName.HandThumbsDownFill" /> @_event.Dislikes</span>
+                        <span class="how-reaction-btn"><Icon Name="IconName.BookmarkFill" class="text-primary" /> @_event.SavedCount</span>
                     </div>
                 </div>
             </div>
@@ -86,67 +116,85 @@
     </div>
 }
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="h5 fw-bold mb-0"><Icon Name="IconName.ClockHistory" class="text-primary me-1" /> Occurrence Records (@_count)</h4>
+    <button class="btn btn-sm btn-primary rounded-pill px-3" @onclick="ShowCreateRecordModal">
+        <Icon Name="IconName.PlusLg" /> Log Occurrence
+    </button>
+</div>
+
 @if (_count > 0)
 {
-    <div>
-        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
-    </div>
-
-    foreach (var record in _recordsToDisplay)
+    @foreach (var record in _recordsToDisplay)
     {
-        <div class="card mt-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Record #@record.Id</span>
+        <div class="how-record-card">
+            <div class="d-flex flex-wrap justify-content-between align-items-center pb-2 mb-3 border-bottom gap-2">
+                <div class="d-flex align-items-center gap-2 text-muted small">
+                    <span class="badge bg-primary-subtle text-primary fw-semibold">Record #@record.Id</span>
+                    <Icon Name="IconName.CalendarEvent" />
+                    <span>@record.CreatedAt.ToString("MMM dd, yyyy HH:mm:ss")</span>
+                </div>
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-dark" @onclick="() => ShowUploadRecordImagesModal(record.Id)">
-                        <Icon Name="IconName.ImageFill"/> Upload Images
+                    <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @onclick="() => ShowUploadRecordImagesModal(record.Id)">
+                        <Icon Name="IconName.Images" /> Upload Photos
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ShowUpdateRecordModal(record)">
-                        <Icon Name="IconName.Pencil"/> Edit
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" @onclick="() => ShowUpdateRecordModal(record)">
+                        <Icon Name="IconName.Pencil" /> Edit
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => DeleteRecord(record.Id)">
-                        <Icon Name="IconName.Trash"/> Delete
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" @onclick="() => DeleteRecord(record.Id)">
+                        <Icon Name="IconName.Trash" /> Delete
                     </button>
                 </div>
             </div>
-            <div class="row" >
-                <div class="col-md-4">
-                    <div class="card-body">
-                        <p class="card-text">Created At: @record.CreatedAt</p>
-                        <p class="card-text">Description: @record.Description</p>
-                        <p class="card-text">Likes: @record.Likes</p>
-                        <p class="card-text">Dislikes: @record.Dislikes</p>
+
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-3 fs-6">@record.Description</p>
+                    <div class="how-reactions">
+                        <span class="how-reaction-btn"><Icon Name="IconName.HeartFill" class="text-danger" /> @record.Likes</span>
+                        <span class="how-reaction-btn"><Icon Name="IconName.HandThumbsDownFill" /> @record.Dislikes</span>
                     </div>
                 </div>
-                <div class="col-md-8">
-                    <div class="card-body"  style="background-color: #708090">
-                        <Carousel>
-                            @if (!record.Images.Any())
-                            {
-                                <CarouselItem Active="true">
-                                    <img src=@ImagePathHelper.GetPath(AppConfigurations.BackendUrl, string.Empty) class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 200px">
-                                </CarouselItem>
-                            }
-                            else
-                            {
-                                for (int i = 0; i < record.Images.Count; i++)
+                <div class="col-md-6">
+                    @if (record.Images != null && record.Images.Any())
+                    {
+                        <div class="rounded-3 overflow-hidden bg-dark p-2">
+                            <Carousel>
+                                @for (int i = 0; i < record.Images.Count; i++)
                                 {
                                     var recordImageThumbnail = record.Images[i].ThumbnailHash;
-
                                     <CarouselItem Active="@(i == 0)">
-                                        <img src=@recordImageThumbnail class="rounded d-block mx-auto" alt="Record Image" IsThumbnail="true" style="height: 250px; margin: 0 auto;">
+                                        <img src="@recordImageThumbnail" class="rounded d-block mx-auto" alt="Record Image" style="height: 220px; object-fit: contain;" />
                                     </CarouselItem>
                                 }
-                            }
-                        </Carousel>
-                    </div>
+                            </Carousel>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center p-4 bg-light rounded-3 border border-dashed text-muted small">
+                            <Icon Name="IconName.Image" class="fs-4 d-block mb-1" />
+                            No photos attached to this record
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     }
 
-    <div>
-        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+    <div class="d-flex justify-content-center mt-3">
+        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center" />
+    </div>
+}
+else
+{
+    <div class="how-empty-state">
+        <div class="how-empty-icon"><Icon Name="IconName.JournalPlus" /></div>
+        <h6 class="fw-bold">No occurrence records yet</h6>
+        <p class="text-muted mb-3">Log occurrences, notes, and photos to build a chronological history for this event.</p>
+        <button class="btn btn-primary rounded-pill px-4" @onclick="ShowCreateRecordModal">
+            <Icon Name="IconName.PlusLg" /> Add First Record
+        </button>
     </div>
 }
 
@@ -154,7 +202,7 @@
     [Parameter]
     public int EventId { get; set; }
 
-    [CascadingParameter] 
+    [CascadingParameter]
     Task<AuthenticationState> AuthenticationState { get; set; }
 
     [CascadingParameter(Name = "ErrorComponent")]
@@ -196,10 +244,8 @@
             }
         }
 
-        _timer = new Timer();
-        _timer.Interval = 1000; // Update every second
+        _timer = new Timer(1000);
         _timer.Elapsed += OnTimerElapsed;
-
         _timer.Start();
 
         InternalNotificationService.OnError += HandleError;
@@ -244,7 +290,10 @@
                 _currentPageNumber = _totalPage == 0 ? 1 : _totalPage;
             }
             await LoadRecords();
-            await GetCurrentPage();
+            if (_loadedRecords.TryGetValue(_currentPageNumber, out var loaded))
+            {
+                _recordsToDisplay = loaded;
+            }
         }
 
         StateHasChanged();
@@ -296,19 +345,23 @@
 
     private async Task ShowUpdateEventModal()
     {
-        var parameters = new Dictionary<string, object>();
-        parameters.Add("Name", _event.Name);
-        parameters.Add("OnClickCallback", EventCallback.Factory.Create<string>(this, UpdateEvent));
-        await _createEventModal.ShowAsync<CreateUpdateEventModal>(title:"Update Event", parameters: parameters);
+        var parameters = new Dictionary<string, object>
+        {
+            { "Name", _event.Name },
+            { "OnClickCallback", EventCallback.Factory.Create<string>(this, UpdateEvent) }
+        };
+        await _createEventModal.ShowAsync<CreateUpdateEventModal>(title: "Update Event", parameters: parameters);
     }
 
     private async Task ShowUploadImageModal()
     {
-        var parameters = new Dictionary<string, object>();
-        parameters.Add("EventId", _event.Id);
-        parameters.Add("Multiple", false);
-        parameters.Add("OnClickCallback", EventCallback.Factory.Create<InputFileChangeEventArgs>(this, UploadImage));
-        await _uploadImageModal.ShowAsync<UploadImageModal>(title: "Upload Image", parameters: parameters);
+        var parameters = new Dictionary<string, object>
+        {
+            { "EventId", _event.Id },
+            { "Multiple", false },
+            { "OnClickCallback", EventCallback.Factory.Create<InputFileChangeEventArgs>(this, UploadImage) }
+        };
+        await _uploadImageModal.ShowAsync<UploadImageModal>(title: "Upload Event Cover Image", parameters: parameters);
     }
 
     private async Task ShowCreateRecordModal()
@@ -318,7 +371,7 @@
             { "Description", string.Empty },
             { "OnClickCallback", EventCallback.Factory.Create<string>(this, CreateRecord) }
         };
-        await _recordModal.ShowAsync<CreateUpdateRecordModal>(title: "Add New Record", parameters: parameters);
+        await _recordModal.ShowAsync<CreateUpdateRecordModal>(title: "Add New Occurrence Record", parameters: parameters);
     }
 
     private async Task CreateRecord(string description)
@@ -327,6 +380,7 @@
         var recordId = await RecordPrivateService.CreateRecord(EventId, description);
         if (recordId > 0)
         {
+            ToastService.Notify(new(ToastType.Success, "Record added!"));
             await ReloadEventAndRecords();
         }
     }
@@ -348,6 +402,7 @@
         var updated = await RecordPrivateService.UpdateRecord(EventId, _selectedRecordIdForEdit, description);
         if (updated)
         {
+            ToastService.Notify(new(ToastType.Success, "Record updated!"));
             await ReloadEventAndRecords();
         }
     }
@@ -357,6 +412,7 @@
         var deleted = await RecordPrivateService.DeleteRecord(EventId, recordId);
         if (deleted)
         {
+            ToastService.Notify(new(ToastType.Success, "Record deleted!"));
             await ReloadEventAndRecords();
         }
     }
@@ -389,6 +445,7 @@
         if (result)
         {
             _event.Name = name;
+            ToastService.Notify(new(ToastType.Success, "Event updated!"));
         }
     }
 
@@ -430,18 +487,18 @@
 
     private void HandleError(string message)
     {
-        ErrorComponent.ShowError("Error!", message);
+        ErrorComponent?.ShowError("Error!", message);
     }
 
     private void OnImageProcessing(bool marker)
     {
         if (marker)
         {
-            ToastService.Notify(new (ToastType.Success, $"Image start processing: {DateTime.Now}"));
+            ToastService.Notify(new(ToastType.Success, $"Image queued for processing: {DateTime.Now:HH:mm:ss}"));
         }
         else
         {
-            ToastService.Notify(new (ToastType.Warning, $"Image failed processing: {DateTime.Now}"));
+            ToastService.Notify(new(ToastType.Warning, $"Image upload failed: {DateTime.Now:HH:mm:ss}"));
         }
     }
 

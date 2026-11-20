@@ -9,52 +9,65 @@
 
 <div class="bb-page">
     <Sidebar @ref="_sidebar"
-             IconName="IconName.HSquare"
-             Title="HOW"
-             BadgeText="v1.0.0"
+             IconName="IconName.ClockHistory"
+             Title="How Long Ago"
+             BadgeText="v2.0"
              DataProvider="SidebarDataProvider" />
 
     <Offcanvas @ref="_offcanvas" />
 
     <main>
-        <div class="bb-top-row px-4 d-flex justify-content-between align-items-center header-container">
-            <!-- Left Side (empty) for spacing -->
-            <div class="left-side"></div>
-
-            <!-- Centered Logo -->
-            <div class="text-center logo-container">
-                <NavLink href="/">
-                    <img src="logo.webp" class="project-icon" alt="Project Icon"/>
+        <div class="how-topbar px-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <NavLink href="/" class="d-flex align-items-center gap-2 text-decoration-none">
+                    <img src="logo.webp" class="project-icon" alt="How Long Ago Logo" />
+                    <span class="fw-bold text-dark d-none d-sm-inline" style="font-size: 1.05rem;">How Long Ago</span>
                 </NavLink>
             </div>
 
-            <!-- Right Side: About and Buttons -->
-            <div class="right-side d-flex align-items-center">
-                <a href="https://docs.microsoft.com/aspnet/" target="_blank" class="mr-3">About</a>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2 rounded-pill px-3" @onclick="@ShowOffCanvasContent">
+                    <Icon Name="IconName.BellFill" />
+                    <span class="d-none d-md-inline">Alerts</span>
+                    @if (_errors.Count > 0)
+                    {
+                        <Badge Color="BadgeColor.Danger" IndicatorType="BadgeIndicatorType.RoundedPill">@_errors.Count</Badge>
+                    }
+                    else
+                    {
+                        <Badge Color="BadgeColor.Secondary" IndicatorType="BadgeIndicatorType.RoundedPill">0</Badge>
+                    }
+                </button>
+
                 <AuthorizeView>
                     <Authorized>
-                        <button type="button" class="btn btn-link mr-3" @onclick="@LogoutClick">Logout</button>
+                        <NavLink href="@Rout.Dashboard.ProfilePage" class="btn btn-sm btn-light border rounded-pill px-3 d-flex align-items-center gap-2">
+                            <Icon Name="IconName.PersonCircle" />
+                            <span class="d-none d-md-inline">@(context.User.Identity?.Name ?? "Profile")</span>
+                        </NavLink>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" @onclick="@LogoutClick">
+                            <Icon Name="IconName.BoxArrowRight" /> <span class="d-none d-sm-inline">Logout</span>
+                        </button>
                     </Authorized>
                     <NotAuthorized>
-                        <button type="button" class="btn btn-link mr-3" @onclick="@LoginClick">Login</button>
+                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" @onclick="@LoginClick">
+                            <Icon Name="IconName.BoxArrowInRight" /> Sign In
+                        </button>
                     </NotAuthorized>
                 </AuthorizeView>
-                <button type="button" class="btn btn-link" @onclick="@ShowOffCanvasContent">
-                    Notifications <Badge Color="BadgeColor.Danger"><Icon Name="IconName.BellFill"/> @_errors.Count</Badge>
-                </button>
             </div>
         </div>
 
-        <article class="content px-4">
+        <article class="content px-4 pb-5">
             <CascadingValue Value="this" Name="ErrorComponent">
                 <div class="py-2">@Body</div>
             </CascadingValue>
         </article>
     </main>
-
 </div>
 
 <Toasts class="p-3" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight" />
+
 @code {
     [CascadingParameter]
     Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -75,8 +88,6 @@
         if (AuthenticationState is not null)
         {
             var user = (await AuthenticationState).User;
-
-            // Check if the user is authenticated
             _isAuthorized = user.Identity != null && user.Identity.IsAuthenticated;
         }
     }
@@ -96,14 +107,19 @@
 
     private IEnumerable<NavItem> GetNavItems()
     {
-        _navItems = new List<NavItem>
+        var items = new List<NavItem>
         {
-            new NavItem { Id = "1", Href = _isAuthorized ? Rout.Home.HomePrivatePage : Rout.Home.HomePublicPage, IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
-            new NavItem { Id = "2", Href = Rout.Dashboard.MainDashboard, IconName = IconName.Database, Text = "Dashboard"},
-            new NavItem { Id = "3", Href = Rout.Dashboard.ProfilePage, IconName = IconName.PersonCircle, Text = "Profile & Sharing"},
-            new NavItem { Id = "4", Href = "/hub-test", IconName = IconName.Github, Text = "HubTest"}
+            new NavItem { Id = "1", Href = _isAuthorized ? Rout.Home.HomePrivatePage : Rout.Home.HomePublicPage, IconName = IconName.CompassFill, Text = "Explore Feed", Match = NavLinkMatch.All }
         };
 
+        if (_isAuthorized)
+        {
+            items.Add(new NavItem { Id = "2", Href = Rout.Dashboard.MainDashboard, IconName = IconName.Grid1X2Fill, Text = "My Dashboard" });
+            items.Add(new NavItem { Id = "3", Href = Rout.Dashboard.ProfilePage, IconName = IconName.PersonBadgeFill, Text = "Profile & Sharing" });
+            items.Add(new NavItem { Id = "4", Href = "/hub-test", IconName = IconName.BroadcastPin, Text = "Realtime Hub" });
+        }
+
+        _navItems = items;
         return _navItems;
     }
 
@@ -125,15 +141,18 @@
 
     private async Task ShowOffCanvasContent()
     {
-        var parameters = new Dictionary<string, object>();
-        parameters.Add("ErrorsToDisplay", _errors.Select(x => (x.Key, x.Value.title, x.Value.message)));
-        parameters.Add("OnClickCallback", EventCallback.Factory.Create<long>(this, RemoveErrorItem));
+        var parameters = new Dictionary<string, object>
+        {
+            { "ErrorsToDisplay", _errors.Select(x => (x.Key, x.Value.title, x.Value.message)) },
+            { "OnClickCallback", EventCallback.Factory.Create<long>(this, RemoveErrorItem) }
+        };
 
-        await _offcanvas.ShowAsync<ErrorItemOffCanvasComponent>(title: "Errors List", parameters: parameters);
+        await _offcanvas.ShowAsync<ErrorItemOffCanvasComponent>(title: "Notifications & Alerts", parameters: parameters);
     }
 
     public void RemoveErrorItem(long errorId)
     {
         _errors.Remove(errorId);
+        StateHasChanged();
     }
 }

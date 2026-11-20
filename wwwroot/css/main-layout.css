@@ -1,28 +1,33 @@
 :root {
-    --bb-sidebar-width: 270px;
-    --bb-sidebar-collapsed-width: 50px;
-    --bb-sidebar-background-color: rgb(33, 77, 96);
-    --bb-sidebar-top-row-background-color: rgba(0,0,0,0.08);
-    --bb-sidebar-top-row-border-color: rgb(194,192,192);
-    --bb-sidebar-title-text-color: rgb(85, 208, 84);
-    --bb-sidebar-brand-icon-color: #56b671;
-    --bb-sidebar-brand-image-width: 24px;
-    --bb-sidebar-brand-image-height: 24px;
-    --bb-sidebar-title-badge-text-color: rgb(85, 208, 84);
-    --bb-sidebar-title-badge-background-color: rgba(25,135,84,0.8);
-    --bb-sidebar-navbar-toggler-icon-color: rgb(178, 1, 227);
-    --bb-sidebar-navbar-toggler-background-color: rgba(0,0,0,0.08);
-    --bb-sidebar-content-border-color: rgb(76, 6, 86);
-    --bb-sidebar-nav-item-text-color: rgb(246, 10, 244);
-    --bb-sidebar-nav-item-text-active-color-rgb: 0,0,0;
-    --bb-sidebar-nav-item-text-hover-color: rgba(var(--bb-sidebar-nav-item-text-active-color-rgb),0.9);
-    --bb-sidebar-nav-item-text-active-color: rgba(var(--bb-sidebar-nav-item-text-active-color-rgb),0.9);
-    --bb-sidebar-nav-item-background-hover-color: rgba(var(--bb-sidebar-nav-item-text-active-color-rgb),0.08);
-    --bb-sidebar-nav-item-group-background-color: rgba(var(--bb-sidebar-nav-item-text-active-color-rgb),0.08);
+    --bb-sidebar-width: 260px;
+    --bb-sidebar-collapsed-width: 64px;
+    --bb-sidebar-background-color: #0f172a;
+    --bb-sidebar-top-row-background-color: #1e293b;
+    --bb-sidebar-top-row-border-color: rgba(255, 255, 255, 0.08);
+    --bb-sidebar-title-text-color: #f8fafc;
+    --bb-sidebar-brand-icon-color: #6366f1;
+    --bb-sidebar-brand-image-width: 28px;
+    --bb-sidebar-brand-image-height: 28px;
+    --bb-sidebar-title-badge-text-color: #e0e7ff;
+    --bb-sidebar-title-badge-background-color: #4f46e5;
+    --bb-sidebar-navbar-toggler-icon-color: #94a3b8;
+    --bb-sidebar-navbar-toggler-background-color: rgba(255, 255, 255, 0.05);
+    --bb-sidebar-content-border-color: rgba(255, 255, 255, 0.08);
+    --bb-sidebar-nav-item-text-color: #cbd5e1;
+    --bb-sidebar-nav-item-text-active-color-rgb: 255, 255, 255;
+    --bb-sidebar-nav-item-text-hover-color: #ffffff;
+    --bb-sidebar-nav-item-text-active-color: #ffffff;
+    --bb-sidebar-nav-item-background-hover-color: rgba(99, 102, 241, 0.18);
+    --bb-sidebar-nav-item-group-background-color: rgba(99, 102, 241, 0.12);
 }
 
-/* Style the logo */
 .project-icon {
-    max-height: 50px; /* Ensure the logo fits well in the header */
+    max-height: 40px;
     width: auto;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.project-icon:hover {
+    transform: scale(1.05);
 }

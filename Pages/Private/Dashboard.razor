@@ -18,115 +18,191 @@
 @inject InternalNotificationService InternalNotificationService
 @implements IDisposable
 
+<PageTitle>My Dashboard — How Long Ago</PageTitle>
+
 <Modal @ref="_modal" Size="ModalSize.Large"></Modal>
 
-<br/>
-<div class="d-flex gap-2 mb-8">
-    <Dropdown Color="DropdownColor.Primary" Direction="DropdownDirection.DropdownCentered">
-        <DropdownToggleButton>@AccessFilter</DropdownToggleButton>
-        <DropdownMenu>
-            <DropdownItem @onclick="() => OnAccessFilterChanged(ApiRequestAccessFilter.Own)" Type="DropdownItemType.Link">Own</DropdownItem>
-            <DropdownItem @onclick="() => OnAccessFilterChanged(ApiRequestAccessFilter.Shared)" Type="DropdownItemType.Link">Shared</DropdownItem>
-            <DropdownItem @onclick="() => OnAccessFilterChanged(ApiRequestAccessFilter.Saved)" Type="DropdownItemType.Link">Saved</DropdownItem>
-        </DropdownMenu>
-    </Dropdown>
-    <Dropdown Color="DropdownColor.Dark" Direction="DropdownDirection.DropdownCentered">
-        <DropdownToggleButton>@Status</DropdownToggleButton>
-        <DropdownMenu>
-            <DropdownItem @onclick="() => OnStatusFilterChanged(EventStatus.None)" Type="DropdownItemType.Link">None</DropdownItem>
-            <DropdownItem @onclick="() => OnStatusFilterChanged(EventStatus.Inactive)" Type="DropdownItemType.Link">Inactive</DropdownItem>
-            <DropdownItem @onclick="() => OnStatusFilterChanged(EventStatus.Active)" Type="DropdownItemType.Link">Active</DropdownItem>
-        </DropdownMenu>
-    </Dropdown>
-    <Dropdown Color="DropdownColor.Dark">
-        <DropdownToggleButton>@AccessType</DropdownToggleButton>
-        <DropdownMenu>
-            <DropdownItem @onclick="() => OnAccessTypeFilterChanged(EventAccessType.None)" Type="DropdownItemType.Link">None</DropdownItem>
-            <DropdownItem @onclick="() => OnAccessTypeFilterChanged(EventAccessType.Private)" Type="DropdownItemType.Link">Private</DropdownItem>
-            <DropdownItem @onclick="() => OnAccessTypeFilterChanged(EventAccessType.Public)" Type="DropdownItemType.Link">Public</DropdownItem>
-        </DropdownMenu>
-    </Dropdown>
-    <div class="mb-6">
-        <InputText class="form-control" placeholder="Search items..." @bind-Value="_searchQuery"/>
+<div class="how-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div>
+        <h1 class="h3 fw-bold">Events Workspace</h1>
+        <p class="subtitle">Manage your personal events, collaborate on shared timelines, and review bookmarked milestones.</p>
     </div>
-    <button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
-    <button class="btn btn-primary" @onclick="ShowCreateEventModal">Create new Event</button>
+    <button class="btn btn-light fw-semibold rounded-pill px-4 d-flex align-items-center gap-2 shadow-sm" @onclick="ShowCreateEventModal">
+        <Icon Name="IconName.PlusCircleFill" class="text-primary" /> Create New Event
+    </button>
 </div>
 
-@if (_count > 0)
-{
-    <div class="pt-3">
-        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+<div class="how-toolbar justify-content-between">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <div class="btn-group" role="group" aria-label="Scope Filter">
+            <button type="button"
+                    class="btn btn-sm @(AccessFilter == ApiRequestAccessFilter.Own ? "btn-primary" : "btn-outline-secondary")"
+                    @onclick="() => OnAccessFilterChanged(ApiRequestAccessFilter.Own)">
+                <Icon Name="IconName.PersonFill" /> My Events
+            </button>
+            <button type="button"
+                    class="btn btn-sm @(AccessFilter == ApiRequestAccessFilter.Shared ? "btn-primary" : "btn-outline-secondary")"
+                    @onclick="() => OnAccessFilterChanged(ApiRequestAccessFilter.Shared)">
+                <Icon Name="IconName.PeopleFill" /> Shared With Me
+            </button>
+            <button type="button"
+                    class="btn btn-sm @(AccessFilter == ApiRequestAccessFilter.Saved ? "btn-primary" : "btn-outline-secondary")"
+                    @onclick="() => OnAccessFilterChanged(ApiRequestAccessFilter.Saved)">
+                <Icon Name="IconName.BookmarkHeartFill" /> Saved
+            </button>
+        </div>
+
+        <Dropdown Color="DropdownColor.Light">
+            <DropdownToggleButton Size="DropdownSize.Small" Class="border">
+                Status: <strong>@Status</strong>
+            </DropdownToggleButton>
+            <DropdownMenu>
+                <DropdownItem @onclick="() => OnStatusFilterChanged(EventStatus.None)" Type="DropdownItemType.Link">All Statuses</DropdownItem>
+                <DropdownItem @onclick="() => OnStatusFilterChanged(EventStatus.Active)" Type="DropdownItemType.Link">Active Only</DropdownItem>
+                <DropdownItem @onclick="() => OnStatusFilterChanged(EventStatus.Inactive)" Type="DropdownItemType.Link">Inactive Only</DropdownItem>
+            </DropdownMenu>
+        </Dropdown>
+
+        <Dropdown Color="DropdownColor.Light">
+            <DropdownToggleButton Size="DropdownSize.Small" Class="border">
+                Visibility: <strong>@AccessType</strong>
+            </DropdownToggleButton>
+            <DropdownMenu>
+                <DropdownItem @onclick="() => OnAccessTypeFilterChanged(EventAccessType.None)" Type="DropdownItemType.Link">All Visibility</DropdownItem>
+                <DropdownItem @onclick="() => OnAccessTypeFilterChanged(EventAccessType.Public)" Type="DropdownItemType.Link">Public Only</DropdownItem>
+                <DropdownItem @onclick="() => OnAccessTypeFilterChanged(EventAccessType.Private)" Type="DropdownItemType.Link">Private Only</DropdownItem>
+            </DropdownMenu>
+        </Dropdown>
     </div>
 
-    @foreach (var item in _eventsToDisplay)
-    {
-        <div class="card">
-            <div class="card-header">
-                <div class="row">
-                    <h5 class="card-title col-md-11">Event Name: @item.Name</h5>
+    <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 420px;">
+        <div class="how-search-box">
+            <i class="bi bi-search"></i>
+            <InputText class="form-control form-control-sm" placeholder="Filter events by name..." @bind-Value="_searchQuery" />
+        </div>
+        <button class="btn btn-sm btn-primary px-3" @onclick="ReloadEvents" disabled="@_isLoading">
+            Filter
+        </button>
+    </div>
+</div>
+
+@if (_isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary mb-2" role="status"></div>
+        <p class="text-muted mb-0">Loading workspace events...</p>
+    </div>
+}
+else if (_count > 0)
+{
+    <div class="how-events-grid">
+        @foreach (var item in _eventsToDisplay)
+        {
+            <div class="how-event-card">
+                <div class="how-card-cover-wrap">
+                    <img src="@item.Image.ThumbnailHash" class="how-card-cover" alt="@item.Name" />
+                    <div class="how-card-badges">
+                        <div class="d-flex gap-1">
+                            <span class="how-pill-badge @(item.Access == EventAccessType.Public ? "how-pill-public" : "how-pill-private")">
+                                <Icon Name="@(item.Access == EventAccessType.Public ? IconName.Globe : IconName.LockFill)" />
+                                @item.Access
+                            </span>
+                            <span class="how-pill-badge @(item.Status == EventStatus.Active ? "how-pill-active" : "how-pill-inactive")">
+                                @item.Status
+                            </span>
+                        </div>
+
+                        @if (AccessFilter == ApiRequestAccessFilter.Own)
+                        {
+                            <button type="button"
+                                    class="btn btn-sm btn-danger rounded-circle shadow-sm"
+                                    title="Delete Event"
+                                    @onclick="() => DeleteEvent(item.Id)">
+                                <Icon Name="IconName.TrashFill" />
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="how-card-body">
+                    <h5 class="how-card-title" title="@item.Name">@item.Name</h5>
+
+                    <div class="how-timer-box">
+                        <div class="how-timer-label">Elapsed Time</div>
+                        <div class="how-timer-value">@DurationFormatHelper.FormatHumanReadable(item.Duration)</div>
+                    </div>
+
                     @if (AccessFilter == ApiRequestAccessFilter.Own)
                     {
-                        <button type="button" class="btn btn-link ms-auto col-md-1" @onclick="() => DeleteEvent(item.Id)">
-                            <Badge Color="BadgeColor.Dark"><Icon Name="IconName.Trash"/></Badge>
-                        </button>
+                        <div class="d-flex justify-content-between align-items-center bg-light rounded-3 px-3 py-2 border">
+                            <Switch @onclick="async () => await OnAccessToggleChanged(item)"
+                                    Value="item.AccessToggle"
+                                    ValueExpression="() => item.AccessToggle"
+                                    Label="Public" />
+                            <Switch @onclick="async () => await OnStatusToggleChanged(item)"
+                                    Value="item.StatusToggle"
+                                    ValueExpression="() => item.StatusToggle"
+                                    Label="Active" />
+                        </div>
                     }
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card-body">
-                        <p class="card-text">Created At: @item.CreatedAt</p>
-                        <p class="card-text">Access: @item.Access</p>
-                        @if (AccessFilter == ApiRequestAccessFilter.Own)
-                        {
-                            <div class="mb-3">
-                                <Switch @onclick="async () => await OnAccessToggleChanged(item)" Value="item.AccessToggle" ValueExpression="() => item.AccessToggle" Label="Set public"/>
+
+                    <div class="how-author-row">
+                        <div class="how-author-info">
+                            <img src="@item.UserInfo.Image.ThumbnailHash" class="how-avatar-sm" alt="Author" />
+                            <div>
+                                <div class="how-author-name">
+                                    @(string.IsNullOrWhiteSpace($"{item.UserInfo.FirstName} {item.UserInfo.LastName}")
+                                        ? "Owner"
+                                        : $"{item.UserInfo.FirstName} {item.UserInfo.LastName}")
+                                </div>
+                                <div class="how-created-date">Created @item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
                             </div>
-                        }
-                        <p class="card-text">Status: @item.Status</p>
-                        @if (AccessFilter == ApiRequestAccessFilter.Own)
-                        {
-                            <div class="mb-3">
-                                <Switch @onclick="async () => await OnStatusToggleChanged(item)" Value="item.StatusToggle" ValueExpression="() => item.StatusToggle" Label="Set active"/>
-                            </div>
-                        }
-                        <p class="card-text">Likes: @item.Likes</p>
-                        <p class="card-text">Dislikes: @item.Dislikes</p>
-                        <p class="card-text">Saved: @item.SavedCount</p>
-                        <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card-body">
-                        <img src=@item.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card-body">
-                        <div class="card-text">
-                            <p class="card-text">Author</p>
-                            <p class="card-text">Name: @item.UserInfo.FirstName @item.UserInfo.LastName</p>
-                        </div>
-                        <div class="card-img-top">
-                            <img src=@item.UserInfo.Image.ThumbnailHash class="rounded float-md-none" alt="Author Image" IsThumbnail="true" style="height: 100px">
                         </div>
                     </div>
                 </div>
+
+                <div class="how-action-bar">
+                    <div class="how-reactions">
+                        <span class="how-reaction-btn" title="Likes">
+                            <Icon Name="IconName.HeartFill" class="text-danger" /> @item.Likes
+                        </span>
+                        <span class="how-reaction-btn" title="Dislikes">
+                            <Icon Name="IconName.HandThumbsDownFill" /> @item.Dislikes
+                        </span>
+                        <span class="how-reaction-btn" title="Saved Count">
+                            <Icon Name="IconName.BookmarkFill" class="text-primary" /> @item.SavedCount
+                        </span>
+                    </div>
+                    <button class="btn btn-sm btn-primary rounded-pill px-3" @onclick="() => NavigateToEventInfo(item.Id)">
+                        Manage <Icon Name="IconName.ArrowRight" />
+                    </button>
+                </div>
             </div>
-            <div class="card-footer">
-                <button class="btn btn-primary" onclick="@(() => NavigateToEventInfo(item.Id))">View Details</button>
-            </div>
-        </div>
-    }
+        }
+    </div>
+
+    <div class="d-flex justify-content-center mt-3">
+        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center" />
+    </div>
+}
+else
+{
+    <div class="how-empty-state">
+        <div class="how-empty-icon"><Icon Name="IconName.FolderPlus" /></div>
+        <h5 class="fw-bold">No events in "@AccessFilter"</h5>
+        <p class="text-muted mb-3">
+            @(AccessFilter == ApiRequestAccessFilter.Own
+                ? "Start tracking your first event or milestone right now."
+                : "No shared or saved events match your current filters.")
+        </p>
+        <button class="btn btn-primary rounded-pill px-4" @onclick="ShowCreateEventModal">
+            <Icon Name="IconName.PlusLg" /> Create New Event
+        </button>
+    </div>
 }
 
-<div class="pt-3">
-    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
-</div>
-
 @code {
-    [CascadingParameter] 
+    [CascadingParameter]
     Task<AuthenticationState> AuthenticationState { get; set; }
 
     [CascadingParameter(Name = "ErrorComponent")]
@@ -139,11 +215,12 @@
     private ApiRequestAccessFilter AccessFilter { get; set; } = ApiRequestAccessFilter.Own;
 
     private int _count = 0;
+    private bool _isLoading = true;
     private List<EventItemPrivateModelDTO> _eventsToDisplay = new();
     private Dictionary<int, List<EventItemPrivateModelDTO>> _loadedEvents = new();
 
     private int _currentPageNumber = 1;
-    private readonly int _pageSize = 5;
+    private readonly int _pageSize = 6;
     private int _totalPage = 1;
     private string _searchQuery = string.Empty;
 
@@ -165,11 +242,10 @@
             }
         }
 
-        _timer = new Timer();
-        _timer.Interval = 1000; // Update every second
+        _timer = new Timer(1000);
         _timer.Elapsed += OnTimerElapsed;
-
         _timer.Start();
+
         InternalNotificationService.OnError += HandleError;
 
         await OnPageChangedAsync(_currentPageNumber);
@@ -214,12 +290,14 @@
     private async Task OnPageChangedAsync(int pageNumber)
     {
         _currentPageNumber = pageNumber;
-
         await GetCurrentPage();
     }
 
     private async Task GetCurrentPage()
     {
+        _isLoading = true;
+        StateHasChanged();
+
         if (_loadedEvents.TryGetValue(_currentPageNumber, out var events))
         {
             _eventsToDisplay = events;
@@ -232,9 +310,13 @@
             }
 
             await LoadEvents();
-            await GetCurrentPage();
+            if (_loadedEvents.TryGetValue(_currentPageNumber, out var loaded))
+            {
+                _eventsToDisplay = loaded;
+            }
         }
 
+        _isLoading = false;
         StateHasChanged();
     }
 
@@ -268,15 +350,15 @@
         _totalPage = (int)Math.Ceiling((double)_count / _pageSize);
 
         _loadedEvents.TryAdd(_currentPageNumber, result.Events);
-
-        StateHasChanged();
     }
 
     private async Task ShowCreateEventModal()
     {
-        var parameters = new Dictionary<string, object>();
-        parameters.Add("OnClickCallback", EventCallback.Factory.Create<string>(this, CreateEvent));
-        await _modal.ShowAsync<CreateUpdateEventModal>(title:"Create Event", parameters: parameters);
+        var parameters = new Dictionary<string, object>
+        {
+            { "OnClickCallback", EventCallback.Factory.Create<string>(this, CreateEvent) }
+        };
+        await _modal.ShowAsync<CreateUpdateEventModal>(title: "Create New Event", parameters: parameters);
     }
 
     private async Task CreateEvent(string name)
@@ -327,7 +409,7 @@
 
     private void HandleError(string message)
     {
-        ErrorComponent.ShowError("Error!", message);
+        ErrorComponent?.ShowError("Error!", message);
     }
 
     public void Dispose()

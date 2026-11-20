@@ -1,40 +1,25 @@
 @using System.ComponentModel.DataAnnotations
-<style>
-    .valid.modified:not([type=checkbox]) {
-        outline: 1px solid #26b050;
-    }
-
-    .invalid {
-        outline: 1px solid red;
-    }
-
-    .validation-message {
-        color: red;
-    }
-</style>
 
 <EditForm EditContext="@_editContext" OnValidSubmit="HandleOnValidSubmit">
     <DataAnnotationsValidator />
 
-    <div class="form-group row mb-3">
-        <label class="col-md-2 col-form-label">Event Name: <span class="text-danger">*</span></label>
-        <div class="col-md-10">
-            <TextInput @bind-Value="@_model.EventName" Placeholder="Enter event name" />
-            <ValidationMessage For="@(() => _model.EventName)" />
-        </div>
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Event Title <span class="text-danger">*</span></label>
+        <TextInput @bind-Value="@_model.EventName" Placeholder="e.g., Last production outage, Started learning Rust..." />
+        <ValidationMessage For="@(() => _model.EventName)" />
+        <div class="form-text">Choose a clear name for the milestone or event you want to track.</div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12 text-right">
-            <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="ResetForm">Reset</Button>
-            <Button Type="ButtonType.Submit" Color="ButtonColor.Success" Class="float-end me-2">Submit</Button>
-        </div>
+    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Light" Class="border rounded-pill px-3" @onclick="ResetForm">Clear</Button>
+        <Button Type="ButtonType.Submit" Color="ButtonColor.Primary" Class="rounded-pill px-4">
+            <Icon Name="IconName.Check2" /> Save Event
+        </Button>
     </div>
-
 </EditForm>
+
 @code {
     private NewEventModel _model;
-
     private EditContext _editContext;
 
     [Parameter] public string Name { get; set; } = string.Empty;
@@ -62,14 +47,13 @@
         };
 
         _editContext = new EditContext(_model);
-
         base.OnInitialized();
     }
 
     private class NewEventModel
     {
-        [Required(AllowEmptyStrings = false, ErrorMessage = "Name required.")]
-        [DisplayFormat(ConvertEmptyStringToNull=false)]
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Event title is required.")]
+        [DisplayFormat(ConvertEmptyStringToNull = false)]
         public string EventName { get; set; }
     }
 }

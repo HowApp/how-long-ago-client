@@ -3,19 +3,17 @@
 <EditForm EditContext="@_editContext" OnValidSubmit="HandleOnValidSubmit">
     <DataAnnotationsValidator />
 
-    <div class="form-group row mb-3">
-        <label class="col-md-3 col-form-label">Description: <span class="text-danger">*</span></label>
-        <div class="col-md-9">
-            <TextAreaInput @bind-Value="@_model.Description" Rows="4" Placeholder="Enter record description" />
-            <ValidationMessage For="@(() => _model.Description)" />
-        </div>
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Occurrence Notes / Description <span class="text-danger">*</span></label>
+        <TextAreaInput @bind-Value="@_model.Description" Rows="4" Placeholder="Describe what happened at this occurrence..." />
+        <ValidationMessage For="@(() => _model.Description)" />
     </div>
 
-    <div class="row">
-        <div class="col-md-12 text-right">
-            <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="ResetForm">Reset</Button>
-            <Button Type="ButtonType.Submit" Color="ButtonColor.Success" Class="float-end me-2">Submit</Button>
-        </div>
+    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Light" Class="border rounded-pill px-3" @onclick="ResetForm">Clear</Button>
+        <Button Type="ButtonType.Submit" Color="ButtonColor.Primary" Class="rounded-pill px-4">
+            <Icon Name="IconName.Check2" /> Save Record
+        </Button>
     </div>
 </EditForm>
 
@@ -52,7 +50,7 @@
 
     private class RecordFormModel
     {
-        [Required(AllowEmptyStrings = false, ErrorMessage = "Description required.")]
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Description is required.")]
         [StringLength(2048, ErrorMessage = "Description must be at most 2048 characters.")]
         public string Description { get; set; }
     }

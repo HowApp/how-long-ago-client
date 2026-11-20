@@ -1,4 +1,11 @@
-<InputFile class="form-control" id="upload-image" OnChange="UploadImage" multiple="@Multiple" accept=".jpeg,.jpg,.png,.webp"></InputFile>
+<div class="text-center p-4 bg-light rounded-4 border border-dashed">
+    <div class="fs-1 text-primary mb-2">
+        <Icon Name="IconName.CloudArrowUpFill" />
+    </div>
+    <h6 class="fw-bold mb-1">@(Multiple ? "Select up to 5 images" : "Select an image to upload")</h6>
+    <p class="text-muted small mb-3">Supported formats: JPG, JPEG, PNG, WEBP (max 10 MB)</p>
+    <InputFile class="form-control" id="upload-image" OnChange="UploadImage" multiple="@Multiple" accept=".jpeg,.jpg,.png,.webp"></InputFile>
+</div>
 
 @code {
     [Parameter] public int EventId { get; set; }

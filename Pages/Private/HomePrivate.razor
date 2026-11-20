@@ -17,94 +17,133 @@
 @inject InternalNotificationService InternalNotificationService
 @implements IDisposable
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Explore Feed — How Long Ago</PageTitle>
 
-<AuthorizeView>
-    <Authorized>
-        <h1>Hello @UserName !!</h1>
-        <p>Welcome to your new app.</p>
-    </Authorized>
-    <Authorizing>
-        <h1>Loading ...</h1>
-    </Authorizing>
-</AuthorizeView>
-
-<div class="d-flex gap-2 mb-8">
-    <div class="mb-6">
-        <InputText class="form-control" placeholder="Search items..." @bind-Value="_searchQuery"/>
+<div class="how-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div>
+        <h1 class="h3 fw-bold">Welcome back, @(string.IsNullOrWhiteSpace(UserName) ? "Explorer" : UserName)!</h1>
+        <p class="subtitle">Discover active community events, react to milestones, and bookmark events to your Saved list.</p>
     </div>
-    <button class="btn btn-primary" @onclick="ReloadEvents">Reload Events</button>
+    <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-light fw-semibold rounded-pill px-3" @onclick="() => NavigationManager.NavigateTo(Rout.Dashboard.MainDashboard)">
+            <Icon Name="IconName.Grid1X2Fill" /> Go to My Dashboard
+        </button>
+    </div>
 </div>
 
-<br/>
+<div class="how-toolbar">
+    <div class="how-search-box">
+        <i class="bi bi-search"></i>
+        <InputText class="form-control" placeholder="Search community events..." @bind-Value="_searchQuery" />
+    </div>
+    <button class="btn btn-primary d-flex align-items-center gap-2" @onclick="ReloadEvents" disabled="@_isLoading">
+        <Icon Name="IconName.Search" /> Search
+    </button>
+    @if (!string.IsNullOrWhiteSpace(_searchQuery))
+    {
+        <button class="btn btn-outline-secondary" @onclick="ClearSearch" disabled="@_isLoading">
+            Clear
+        </button>
+    }
+</div>
 
-@if (_count > 0)
+@if (_isLoading)
 {
-    <div>
-        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary mb-2" role="status"></div>
+        <p class="text-muted mb-0">Loading feed...</p>
+    </div>
+}
+else if (_count > 0)
+{
+    <div class="how-events-grid">
+        @foreach (var item in _eventsToDisplay)
+        {
+            <div class="how-event-card">
+                <div class="how-card-cover-wrap">
+                    <img src="@item.Image.ThumbnailHash" class="how-card-cover" alt="@item.Name" />
+                    <div class="how-card-badges">
+                        <span class="how-pill-badge how-pill-public">
+                            <Icon Name="IconName.Globe" /> Public
+                        </span>
+                        <button type="button"
+                                class="how-reaction-btn @(item.IsSavedByUser ? "active-save" : "")"
+                                @onclick="async () => await ChangeSavedEventState(item)"
+                                disabled="@item.ButtonSavedDisable"
+                                title="@(item.IsSavedByUser ? "Remove from Saved" : "Save Event")">
+                            <Icon Name="@(item.IsSavedByUser ? IconName.BookmarkCheckFill : IconName.BookmarkPlus)" />
+                            <span>@item.SavedCount</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="how-card-body">
+                    <h5 class="how-card-title" title="@item.Name">@item.Name</h5>
+
+                    <div class="how-timer-box">
+                        <div class="how-timer-label">Elapsed Time</div>
+                        <div class="how-timer-value">@DurationFormatHelper.FormatHumanReadable(item.Duration)</div>
+                    </div>
+
+                    <div class="how-author-row">
+                        <div class="how-author-info">
+                            <img src="@item.UserInfo.Image.ThumbnailHash" class="how-avatar-sm" alt="Author" />
+                            <div>
+                                <div class="how-author-name">
+                                    @(string.IsNullOrWhiteSpace($"{item.UserInfo.FirstName} {item.UserInfo.LastName}")
+                                        ? "Community Member"
+                                        : $"{item.UserInfo.FirstName} {item.UserInfo.LastName}")
+                                </div>
+                                <div class="how-created-date">Started @item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="how-action-bar">
+                    <div class="how-reactions">
+                        <button type="button"
+                                class="how-reaction-btn @(item.OwnLikeState == LikeState.Like ? "active-like" : "")"
+                                @onclick="async () => await ChangeLikeEventState(item)"
+                                disabled="@item.ButtonLikeDisable"
+                                title="Like">
+                            <Icon Name="IconName.HeartFill" /> @item.Likes
+                        </button>
+                        <button type="button"
+                                class="how-reaction-btn @(item.OwnLikeState == LikeState.Dislike ? "active-dislike" : "")"
+                                @onclick="async () => await ChangeDislikeEventState(item)"
+                                disabled="@item.ButtonDislikeDisable"
+                                title="Dislike">
+                            <Icon Name="IconName.HandThumbsDownFill" /> @item.Dislikes
+                        </button>
+                    </div>
+                    <button class="btn btn-sm btn-primary rounded-pill px-3" @onclick="() => NavigateToEventInfo(item.Id)">
+                        Timeline <Icon Name="IconName.ArrowRight" />
+                    </button>
+                </div>
+            </div>
+        }
     </div>
 
-    @foreach (var item in _eventsToDisplay)
-    {
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title">Event Name: @item.Name</h5>
-            </div>
-            <div class="row" >
-                <div class="col-md-4">
-                    <div class="card-body">
-                        <p class="card-text">Created At: @item.CreatedAt</p>
-                        <p class="card-text">
-                            Likes: @item.Likes
-                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeLikeEventState(item)" disabled="@item.ButtonLikeDisable">
-                                <Badge Color="@(item.OwnLikeState != LikeState.Like ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
-                            </button>
-                        </p>
-                        <p class="card-text">
-                            Dislikes: @item.Dislikes
-                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeDislikeEventState(item)" disabled="@item.ButtonDislikeDisable">
-                                <Badge Color="@(item.OwnLikeState != LikeState.Dislike ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.HandThumbsDownFill"/></Badge>
-                            </button>
-                        </p>
-                        <p class="card-text">
-                            Saved: @item.SavedCount
-                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeSavedEventState(item)" disabled="@item.ButtonSavedDisable">
-                                <Badge Color="@(item.IsSavedByUser ? BadgeColor.Danger : BadgeColor.Dark)"><Icon Name="IconName.BookmarkPlusFill"/></Badge>
-                            </button>
-                        </p>
-                        <p>Was @item.Duration.ToString(@"dd\.hh\:mm\:ss") ago</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card-body">
-                        <img src=@item.Image.ThumbnailHash class="rounded d-block mx-auto" alt="Event Image" IsThumbnail="true" style="height: 200px">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card-body">
-                        <div class="card-text">
-                            <p class="card-text">Author</p>
-                            <p class="card-text">Name: @item.UserInfo.FirstName @item.UserInfo.LastName</p>
-                        </div>
-                        <div class="card-img-top">
-                            <img src=@item.UserInfo.Image.ThumbnailHash class="rounded float-md-none" alt="Author Image" IsThumbnail="true" style="height: 100px">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-footer">
-                <button class="btn btn-primary" onclick="@(() => NavigateToEventInfo(item.Id))">View Details</button>
-            </div>
+    <div class="d-flex justify-content-center mt-3">
+        <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center" />
+    </div>
+}
+else
+{
+    <div class="how-empty-state">
+        <div class="how-empty-icon"><Icon Name="IconName.CalendarX" /></div>
+        <h5 class="fw-bold">No matching events found</h5>
+        <p class="text-muted mb-3">Try clearing your search filter or head over to your Dashboard to create a new event.</p>
+        <div class="d-flex justify-content-center gap-2">
+            <button class="btn btn-outline-secondary rounded-pill px-4" @onclick="ClearSearch">Reset Filter</button>
+            <button class="btn btn-primary rounded-pill px-4" @onclick="() => NavigationManager.NavigateTo(Rout.Dashboard.MainDashboard)">Create Event</button>
         </div>
-    }
+    </div>
 }
 
-<div>
-    <Pagination ActivePageNumber="@_currentPageNumber" TotalPages="@_totalPage" PageChanged="OnPageChangedAsync" Alignment="Alignment.Center"/>
-</div>
-
-@code{
-    string? UserName { get; set; }
+@code {
+    string UserName { get; set; }
 
     [CascadingParameter]
     Task<AuthenticationState> AuthenticationState { get; set; }
@@ -113,11 +152,12 @@
     protected IErrorComponent ErrorComponent { get; set; }
 
     private int _count = 0;
+    private bool _isLoading = true;
     private List<EventItemPrivateModelDTO> _eventsToDisplay = new();
     private Dictionary<int, List<EventItemPrivateModelDTO>> _loadedEvents = new();
 
     private int _currentPageNumber = 1;
-    private readonly int _pageSize = 5;
+    private readonly int _pageSize = 6;
     private int _totalPage = 1;
     private string _searchQuery = string.Empty;
 
@@ -141,10 +181,8 @@
             }
         }
 
-        _timer = new Timer();
-        _timer.Interval = 1000; // Update every second
+        _timer = new Timer(1000);
         _timer.Elapsed += OnTimerElapsed;
-
         _timer.Start();
 
         InternalNotificationService.OnError += HandleError;
@@ -173,6 +211,12 @@
         }
     }
 
+    private async Task ClearSearch()
+    {
+        _searchQuery = string.Empty;
+        await ReloadEvents();
+    }
+
     private async Task ReloadEvents()
     {
         _currentPageNumber = 1;
@@ -184,12 +228,14 @@
     private async Task OnPageChangedAsync(int pageNumber)
     {
         _currentPageNumber = pageNumber;
-
         await GetCurrentPage();
     }
 
     private async Task GetCurrentPage()
     {
+        _isLoading = true;
+        StateHasChanged();
+
         if (_loadedEvents.TryGetValue(_currentPageNumber, out var events))
         {
             _eventsToDisplay = events;
@@ -201,9 +247,13 @@
                 _currentPageNumber = _totalPage == 0 ? 1 : _totalPage;
             }
             await LoadEvents();
-            await GetCurrentPage();
+            if (_loadedEvents.TryGetValue(_currentPageNumber, out var loaded))
+            {
+                _eventsToDisplay = loaded;
+            }
         }
 
+        _isLoading = false;
         StateHasChanged();
     }
 
@@ -234,8 +284,6 @@
         _totalPage = (int)Math.Ceiling((double)_count / _pageSize);
 
         _loadedEvents.TryAdd(_currentPageNumber, result.Events);
-
-        StateHasChanged();
     }
 
     private async Task ChangeSavedEventState(EventItemPrivateModelDTO eventItem)
@@ -244,16 +292,9 @@
         try
         {
             var oldValue = eventItem.IsSavedByUser;
-            var success = false;
-
-            if (eventItem.IsSavedByUser)
-            {
-                success = await EventPrivateService.DeleteEventFromSaved(eventItem.Id);
-            }
-            else
-            {
-                success = await EventPrivateService.AddEventToSaved(eventItem.Id);
-            }
+            var success = eventItem.IsSavedByUser
+                ? await EventPrivateService.DeleteEventFromSaved(eventItem.Id)
+                : await EventPrivateService.AddEventToSaved(eventItem.Id);
 
             if (success)
             {
@@ -265,8 +306,6 @@
         {
             eventItem.ButtonSavedDisable = false;
         }
-
-        await Task.Delay(400);
     }
 
     private async Task ChangeLikeEventState(EventItemPrivateModelDTO eventItem)
@@ -276,7 +315,7 @@
         try
         {
             await UpdateLikeState(
-                eventItem, 
+                eventItem,
                 eventItem.OwnLikeState == LikeState.Like ? LikeState.None : LikeState.Like);
         }
         finally
@@ -293,7 +332,7 @@
         try
         {
             await UpdateLikeState(
-                eventItem, 
+                eventItem,
                 eventItem.OwnLikeState == LikeState.Dislike ? LikeState.None : LikeState.Dislike);
         }
         finally
@@ -311,7 +350,6 @@
 
         if (oldState == eventItem.OwnLikeState)
         {
-            await Task.Delay(1500);
             return;
         }
 
@@ -319,8 +357,6 @@
 
         eventItem.Likes += likes;
         eventItem.Dislikes += dislikes;
-
-        await Task.Delay(1500);
     }
 
     private void NavigateToEventInfo(int eventId)
@@ -330,6 +366,6 @@
 
     private void HandleError(string message)
     {
-        ErrorComponent.ShowError("Error!", message);
+        ErrorComponent?.ShowError("Error!", message);
     }
 }
