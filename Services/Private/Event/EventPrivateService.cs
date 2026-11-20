@@ -91,11 +91,13 @@ public class EventPrivateService : IEventPrivateService
         return result;
     }
 
-    public async Task<GetEventByIdPrivateResponseDTO> GetEventById(int eventId)
+    public async Task<GetEventByIdPrivateResponseDTO> GetEventById(
+        int eventId,
+        ApiRequestAccessFilter accessFilter = ApiRequestAccessFilter.Shared)
     {
         try
         {
-            var url = $"api/dashboard/event/{eventId}/{ApiAccessHelper.GetAccess(ApiRequestAccessFilter.Shared)}";
+            var url = $"api/dashboard/event/{eventId}/{ApiAccessHelper.GetAccess(accessFilter)}";
 
             var response = await _clientApi.GetAsync<ResultResponse<GetEventByIdPrivateResponseDTO>>(url);
 

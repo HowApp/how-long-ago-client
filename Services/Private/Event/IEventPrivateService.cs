@@ -10,7 +10,9 @@ public interface IEventPrivateService
     Task<GetEventsPaginationPrivateResponseDTO> GetEventsPagination(
         GetEventsPaginationPrivateRequestDTO request,
         ApiRequestAccessFilter accessFilter = ApiRequestAccessFilter.None);
-    Task<GetEventByIdPrivateResponseDTO> GetEventById(int eventId);
+    Task<GetEventByIdPrivateResponseDTO> GetEventById(
+        int eventId,
+        ApiRequestAccessFilter accessFilter = ApiRequestAccessFilter.Shared);
     Task<bool> UploadImage(int eventId, IBrowserFile file);
     Task<bool> UpdateEvent(int eventId, string name);
     Task UpdateEventAccessState(int eventId, bool setPublic);

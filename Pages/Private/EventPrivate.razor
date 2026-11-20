@@ -264,7 +264,7 @@ else
 
     private async Task LoadEventDetail()
     {
-        _event = await EventPrivateService.GetEventById(EventId);
+        _event = await EventPrivateService.GetEventById(EventId, ApiRequestAccessFilter.None);
         if (_event?.Image is null || _event.UserInfo?.Image is null)
         {
             return;
