@@ -31,6 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRecordPublicService, RecordPublicService>();
 
         // Private
+        services.AddScoped<Services.Private.Account.IAccountPrivateService, Services.Private.Account.AccountPrivateService>();
         services.AddScoped<IEventPrivateService, EventPrivateService>();
         services.AddScoped<IRecordPrivateService, RecordPrivateService>();
 

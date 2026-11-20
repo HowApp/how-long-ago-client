@@ -18,6 +18,7 @@
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
 @inject InternalNotificationService InternalNotificationService
+@implements IDisposable
 
 <h3>Event</h3>
 
@@ -40,7 +41,7 @@
                     <p class="card-text">
                         Dislikes: @_event.Dislikes
                         <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeDislikeEventState()" disabled="@_event.ButtonDislikeDisable">
-                            <Badge Color="@(_event.OwnLikeState != LikeState.Dislike ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
+                            <Badge Color="@(_event.OwnLikeState != LikeState.Dislike ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.HandThumbsDownFill"/></Badge>
                         </button>
                     </p>
                     <p class="card-text">
@@ -86,8 +87,18 @@
                     <div class="card-body">
                         <p class="card-text">Created At: @record.CreatedAt</p>
                         <p class="card-text">Description: @record.Description</p>
-                        <p class="card-text">Likes: @record.Likes</p>
-                        <p class="card-text">Dislikes: @record.Dislikes</p>
+                        <p class="card-text">
+                            Likes: @record.Likes
+                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeRecordLikeState(record, LikeState.Like)">
+                                <Badge Color="@(record.OwnLikeState != LikeState.Like ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
+                            </button>
+                        </p>
+                        <p class="card-text">
+                            Dislikes: @record.Dislikes
+                            <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeRecordLikeState(record, LikeState.Dislike)">
+                                <Badge Color="@(record.OwnLikeState != LikeState.Dislike ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.HandThumbsDownFill"/></Badge>
+                            </button>
+                        </p>
                     </div>
                 </div>
                 <div class="col-md-8">
@@ -170,11 +181,13 @@
         await OnPageChangedAsync(_currentPageNumber);
     }
 
-    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    private async void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
-        _event.Duration = DateTime.Now - _event.CreatedAt;
-
-        StateHasChanged();
+        if (_event is not null)
+        {
+            _event.Duration = DateTime.Now - _event.CreatedAt;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task OnPageChangedAsync(int pageNumber)
@@ -195,7 +208,7 @@
         {
             if (_currentPageNumber > _totalPage || _currentPageNumber < 1)
             {
-                _currentPageNumber = _totalPage;
+                _currentPageNumber = _totalPage == 0 ? 1 : _totalPage;
             }
             await LoadRecords();
             await GetCurrentPage();
@@ -232,6 +245,10 @@
     private async Task LoadEventDetail()
     {
         _event = await EventPrivateService.GetEventById(EventId);
+        if (_event?.Image is null || _event.UserInfo?.Image is null)
+        {
+            return;
+        }
 
         _event.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.MainHash);
         _event.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.ThumbnailHash);
@@ -240,6 +257,23 @@
         _event.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.UserInfo.Image.ThumbnailHash);
 
         _event.Duration = DateTime.Now - _event.CreatedAt;
+    }
+
+    private async Task ChangeRecordLikeState(RecordItemPrivateModelDTO record, LikeState targetState)
+    {
+        var oldState = record.OwnLikeState;
+        var nextState = oldState == targetState ? LikeState.None : targetState;
+
+        record.OwnLikeState = await RecordPrivateService.UpdateRecordLikeState(EventId, record.Id, nextState);
+        if (oldState == record.OwnLikeState)
+        {
+            return;
+        }
+
+        EventLikeDislikeHelper.CountLikeDislike(oldState, record.OwnLikeState, out int likes, out int dislikes);
+        record.Likes += likes;
+        record.Dislikes += dislikes;
+        StateHasChanged();
     }
 
     private async Task ChangeSavedEventState()
@@ -329,5 +363,16 @@
     private void HandleError(string message)
     {
         ErrorComponent.ShowError("Error!", message);
+    }
+
+    public void Dispose()
+    {
+        InternalNotificationService.OnError -= HandleError;
+        if (_timer is not null)
+        {
+            _timer.Elapsed -= OnTimerElapsed;
+            _timer.Stop();
+            _timer.Dispose();
+        }
     }
 }

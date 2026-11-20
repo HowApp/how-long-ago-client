@@ -142,18 +142,28 @@ public class EventPrivateService : IEventPrivateService
 
         if (upload)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, $"api/dashboard/event/{eventId}/image");
-
-            request.Content = requestContent;
-
-            var response = await _clientApi.SendRequest<ResultResponse>(request);
-
-            if (response.Failed)
+            try
             {
-                _notificationService.NotifyError(response.ToString());
-            }
+                var request = new HttpRequestMessage(HttpMethod.Post, $"api/dashboard/event/{eventId}/image")
+                {
+                    Content = requestContent
+                };
 
-            return true;
+                var response = await _clientApi.SendRequest<ResultResponse>(request);
+
+                if (response.Failed)
+                {
+                    _notificationService.NotifyError(response.ToString());
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Request failed: {e}");
+                return false;
+            }
         }
 
         return false;

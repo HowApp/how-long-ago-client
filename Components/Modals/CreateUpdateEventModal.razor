@@ -19,7 +19,7 @@
     <div class="form-group row mb-3">
         <label class="col-md-2 col-form-label">Event Name: <span class="text-danger">*</span></label>
         <div class="col-md-10">
-            <TextInput @bind-Value="@_model.EventName" Placeholder="Enter first name" />
+            <TextInput @bind-Value="@_model.EventName" Placeholder="Enter event name" />
             <ValidationMessage For="@(() => _model.EventName)" />
         </div>
     </div>
@@ -40,11 +40,11 @@
     [Parameter] public string Name { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> OnClickCallback { get; set; }
 
-    public void HandleOnValidSubmit()
+    public async Task HandleOnValidSubmit()
     {
         if (_editContext.Validate())
         {
-            OnClickCallback.InvokeAsync(_model.EventName);
+            await OnClickCallback.InvokeAsync(_model.EventName);
         }
     }
 

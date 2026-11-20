@@ -1,13 +1,9 @@
-@using HowClient.Services.Private.Event
-@inject IEventPrivateService EventPrivateService
-
-<InputFile class="form-control" id="upload-image" OnChange="UploadImage" accept=".jpeg,.jpg,.png,.webp"></InputFile>
+<InputFile class="form-control" id="upload-image" OnChange="UploadImage" multiple="@Multiple" accept=".jpeg,.jpg,.png,.webp"></InputFile>
 
 @code {
     [Parameter] public int EventId { get; set; }
+    [Parameter] public bool Multiple { get; set; }
     [Parameter] public EventCallback<InputFileChangeEventArgs> OnClickCallback { get; set; }
-
-    [Inject] ToastService ToastService { get; set; } = default!;
 
     private async Task UploadImage(InputFileChangeEventArgs e)
     {

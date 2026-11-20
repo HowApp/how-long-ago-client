@@ -13,6 +13,7 @@
 @inject IEventPublicService EventPublicService;
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <h3>Event</h3>
 
@@ -142,11 +143,13 @@
         _timer.Start();
     }
 
-    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    private async void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
-        _event.Duration = DateTime.Now - _event.CreatedAt;
-
-        StateHasChanged();
+        if (_event is not null)
+        {
+            _event.Duration = DateTime.Now - _event.CreatedAt;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task OnPageChangedAsync(int pageNumber)
@@ -167,7 +170,7 @@
         {
             if (_currentPageNumber > _totalPage || _currentPageNumber < 1)
             {
-                _currentPageNumber = _totalPage;
+                _currentPageNumber = _totalPage == 0 ? 1 : _totalPage;
             }
             await LoadRecords();
             await GetCurrentPage();
@@ -205,6 +208,10 @@
     private async Task LoadEventDetail()
     {
         _event = await EventPublicService.GetEventById(EventId);
+        if (_event?.Image is null || _event.UserInfo?.Image is null)
+        {
+            return;
+        }
 
         _event.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.MainHash);
         _event.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.ThumbnailHash);
@@ -213,5 +220,15 @@
         _event.UserInfo.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.UserInfo.Image.ThumbnailHash);
 
         _event.Duration = DateTime.Now - _event.CreatedAt;
+    }
+
+    public void Dispose()
+    {
+        if (_timer is not null)
+        {
+            _timer.Elapsed -= OnTimerElapsed;
+            _timer.Stop();
+            _timer.Dispose();
+        }
     }
 }

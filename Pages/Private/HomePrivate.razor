@@ -1,4 +1,4 @@
-﻿@page "/authorized"
+@page "/authorized"
 @using System.Timers
 @using HowClient.Configuration
 @using HowClient.Infrastructure.DTO.Models
@@ -15,6 +15,7 @@
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
 @inject InternalNotificationService InternalNotificationService
+@implements IDisposable
 
 <PageTitle>Home</PageTitle>
 
@@ -27,8 +28,6 @@
         <h1>Loading ...</h1>
     </Authorizing>
 </AuthorizeView>
-
-<div>Hello user</div>
 
 <div class="d-flex gap-2 mb-8">
     <div class="mb-6">
@@ -64,7 +63,7 @@
                         <p class="card-text">
                             Dislikes: @item.Dislikes
                             <button type="button" class="btn btn-link ml-md-auto" @onclick="async () => await ChangeDislikeEventState(item)" disabled="@item.ButtonDislikeDisable">
-                                <Badge Color="@(item.OwnLikeState != LikeState.Dislike ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.Heart"/></Badge>
+                                <Badge Color="@(item.OwnLikeState != LikeState.Dislike ? BadgeColor.Dark : BadgeColor.Danger)"><Icon Name="IconName.HandThumbsDownFill"/></Badge>
                             </button>
                         </p>
                         <p class="card-text">
@@ -137,7 +136,7 @@
             }
             else
             {
-                NavigationManager.NavigateTo(Rout.Home.HomePrivatePage);
+                NavigationManager.NavigateTo(Rout.Home.HomePublicPage);
                 return;
             }
         }
@@ -153,14 +152,25 @@
         await OnPageChangedAsync(_currentPageNumber);
     }
 
-    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    private async void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
         foreach (var eventItem in _eventsToDisplay)
         {
             eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
         }
 
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        InternalNotificationService.OnError -= HandleError;
+        if (_timer is not null)
+        {
+            _timer.Elapsed -= OnTimerElapsed;
+            _timer.Stop();
+            _timer.Dispose();
+        }
     }
 
     private async Task ReloadEvents()

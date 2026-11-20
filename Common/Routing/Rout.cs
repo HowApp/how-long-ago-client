@@ -29,5 +29,6 @@ public static class Rout
     {
         public static string MainDashboard => $"/{_authorized}/{_dashboard}";
         public static string EventPrivatePage(int eventId) => $"/{_authorized}/{_dashboard}/{_event}/{eventId}/{_record}";
+        public static string ProfilePage => $"/{_authorized}/profile";
     }
 }

@@ -36,6 +36,12 @@ public abstract class BaseClientAPI
         return await ProcessHttpResponse<TReturn>(response);
     }
 
+    protected async Task<TReturn> PutAsync<TReturn, TRequest>(string uri, TRequest request)
+    {
+        var response = await _httpClient.PutAsJsonAsync(uri, request);
+        return await ProcessHttpResponse<TReturn>(response);
+    }
+
     protected async Task<TReturn> PatchAsync<TReturn, TRequest>(string uri, TRequest request)
     {
         var response = await _httpClient.PatchAsJsonAsync(uri, request);
@@ -51,6 +57,16 @@ public abstract class BaseClientAPI
     protected async Task<TReturn> DeleteAsync<TReturn>(string uri)
     {
         var response = await _httpClient.DeleteAsync(uri);
+        return await ProcessHttpResponse<TReturn>(response);
+    }
+
+    protected async Task<TReturn> DeleteAsync<TReturn, TRequest>(string uri, TRequest request)
+    {
+        var httpRequest = new HttpRequestMessage(HttpMethod.Delete, uri)
+        {
+            Content = JsonContent.Create(request)
+        };
+        var response = await _httpClient.SendAsync(httpRequest);
         return await ProcessHttpResponse<TReturn>(response);
     }
 

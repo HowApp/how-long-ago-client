@@ -16,6 +16,7 @@
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
 @inject InternalNotificationService InternalNotificationService
+@implements IDisposable
 
 <Modal @ref="_modal" Size="ModalSize.Large"></Modal>
 
@@ -24,24 +25,25 @@
     <Dropdown Color="DropdownColor.Primary" Direction="DropdownDirection.DropdownCentered">
         <DropdownToggleButton>@AccessFilter</DropdownToggleButton>
         <DropdownMenu>
-            <DropdownItem @onclick="() => AccessFilter = ApiRequestAccessFilter.Own" Type="DropdownItemType.Link">Own</DropdownItem>
-            <DropdownItem @onclick="() => AccessFilter = ApiRequestAccessFilter.Shared" Type="DropdownItemType.Link">Shared</DropdownItem>
+            <DropdownItem @onclick="() => OnAccessFilterChanged(ApiRequestAccessFilter.Own)" Type="DropdownItemType.Link">Own</DropdownItem>
+            <DropdownItem @onclick="() => OnAccessFilterChanged(ApiRequestAccessFilter.Shared)" Type="DropdownItemType.Link">Shared</DropdownItem>
+            <DropdownItem @onclick="() => OnAccessFilterChanged(ApiRequestAccessFilter.Saved)" Type="DropdownItemType.Link">Saved</DropdownItem>
         </DropdownMenu>
     </Dropdown>
     <Dropdown Color="DropdownColor.Dark" Direction="DropdownDirection.DropdownCentered">
         <DropdownToggleButton>@Status</DropdownToggleButton>
         <DropdownMenu>
-            <DropdownItem @onclick="() => Status = EventStatus.None" Type="DropdownItemType.Link">None</DropdownItem>
-            <DropdownItem @onclick="() => Status = EventStatus.Inactive" Type="DropdownItemType.Link">Inactive</DropdownItem>
-            <DropdownItem @onclick="() => Status = EventStatus.Active" Type="DropdownItemType.Link">Active</DropdownItem>
+            <DropdownItem @onclick="() => OnStatusFilterChanged(EventStatus.None)" Type="DropdownItemType.Link">None</DropdownItem>
+            <DropdownItem @onclick="() => OnStatusFilterChanged(EventStatus.Inactive)" Type="DropdownItemType.Link">Inactive</DropdownItem>
+            <DropdownItem @onclick="() => OnStatusFilterChanged(EventStatus.Active)" Type="DropdownItemType.Link">Active</DropdownItem>
         </DropdownMenu>
     </Dropdown>
     <Dropdown Color="DropdownColor.Dark">
         <DropdownToggleButton>@AccessType</DropdownToggleButton>
         <DropdownMenu>
-            <DropdownItem @onclick="() => AccessType = EventAccessType.None" Type="DropdownItemType.Link">None</DropdownItem>
-            <DropdownItem @onclick="() => AccessType = EventAccessType.Private" Type="DropdownItemType.Link">Private</DropdownItem>
-            <DropdownItem @onclick="() => AccessType = EventAccessType.Public" Type="DropdownItemType.Link">Public</DropdownItem>
+            <DropdownItem @onclick="() => OnAccessTypeFilterChanged(EventAccessType.None)" Type="DropdownItemType.Link">None</DropdownItem>
+            <DropdownItem @onclick="() => OnAccessTypeFilterChanged(EventAccessType.Private)" Type="DropdownItemType.Link">Private</DropdownItem>
+            <DropdownItem @onclick="() => OnAccessTypeFilterChanged(EventAccessType.Public)" Type="DropdownItemType.Link">Public</DropdownItem>
         </DropdownMenu>
     </Dropdown>
     <div class="mb-6">
@@ -63,9 +65,12 @@
             <div class="card-header">
                 <div class="row">
                     <h5 class="card-title col-md-11">Event Name: @item.Name</h5>
-                    <button type="button" class="btn btn-link ms-auto col-md-1" @onclick="() => DeleteEvent(item.Id)">
-                        <Badge Color="BadgeColor.Dark"><Icon Name="IconName.Trash"/></Badge>
-                    </button>
+                    @if (AccessFilter == ApiRequestAccessFilter.Own)
+                    {
+                        <button type="button" class="btn btn-link ms-auto col-md-1" @onclick="() => DeleteEvent(item.Id)">
+                            <Badge Color="BadgeColor.Dark"><Icon Name="IconName.Trash"/></Badge>
+                        </button>
+                    }
                 </div>
             </div>
             <div class="row">
@@ -73,13 +78,19 @@
                     <div class="card-body">
                         <p class="card-text">Created At: @item.CreatedAt</p>
                         <p class="card-text">Access: @item.Access</p>
-                        <div class="mb-3">
-                            <Switch @onclick="() => OnAccessToggleChanged(item)" Value="item.AccessToggle" ValueExpression="() => item.AccessToggle" Label="Set public"/>
-                        </div>
+                        @if (AccessFilter == ApiRequestAccessFilter.Own)
+                        {
+                            <div class="mb-3">
+                                <Switch @onclick="async () => await OnAccessToggleChanged(item)" Value="item.AccessToggle" ValueExpression="() => item.AccessToggle" Label="Set public"/>
+                            </div>
+                        }
                         <p class="card-text">Status: @item.Status</p>
-                        <div class="mb-3">
-                            <Switch @onclick="() => OnStatusToggleChanged(item)" Value="item.StatusToggle" ValueExpression="() => item.StatusToggle" Label="Set active"/>
-                        </div>
+                        @if (AccessFilter == ApiRequestAccessFilter.Own)
+                        {
+                            <div class="mb-3">
+                                <Switch @onclick="async () => await OnStatusToggleChanged(item)" Value="item.StatusToggle" ValueExpression="() => item.StatusToggle" Label="Set active"/>
+                            </div>
+                        }
                         <p class="card-text">Likes: @item.Likes</p>
                         <p class="card-text">Dislikes: @item.Dislikes</p>
                         <p class="card-text">Saved: @item.SavedCount</p>
@@ -164,14 +175,32 @@
         await OnPageChangedAsync(_currentPageNumber);
     }
 
-    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    private async void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
         foreach (var eventItem in _eventsToDisplay)
         {
             eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
         }
 
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnAccessFilterChanged(ApiRequestAccessFilter filter)
+    {
+        AccessFilter = filter;
+        await ReloadEvents();
+    }
+
+    private async Task OnStatusFilterChanged(EventStatus status)
+    {
+        Status = status;
+        await ReloadEvents();
+    }
+
+    private async Task OnAccessTypeFilterChanged(EventAccessType accessType)
+    {
+        AccessType = accessType;
+        await ReloadEvents();
     }
 
     private async Task ReloadEvents()
@@ -246,7 +275,7 @@
     private async Task ShowCreateEventModal()
     {
         var parameters = new Dictionary<string, object>();
-        parameters.Add("OnclickCallback", EventCallback.Factory.Create<string>(this, CreateEvent));
+        parameters.Add("OnClickCallback", EventCallback.Factory.Create<string>(this, CreateEvent));
         await _modal.ShowAsync<CreateUpdateEventModal>(title:"Create Event", parameters: parameters);
     }
 
@@ -273,25 +302,42 @@
 
     private void NavigateToEventInfo(int eventId)
     {
+        if (AccessFilter == ApiRequestAccessFilter.Saved)
+        {
+            NavigationManager.NavigateTo(Rout.Event.EventPrivatePage(eventId));
+            return;
+        }
+
         NavigationManager.NavigateTo(Rout.Dashboard.EventPrivatePage(eventId));
     }
 
-    private void OnAccessToggleChanged(EventItemPrivateModelDTO eventItemPrivate)
+    private async Task OnAccessToggleChanged(EventItemPrivateModelDTO eventItemPrivate)
     {
         eventItemPrivate.AccessToggle = !eventItemPrivate.AccessToggle;
         eventItemPrivate.Access = eventItemPrivate.AccessToggle ? EventAccessType.Public : EventAccessType.Private;
-        EventPrivateService.UpdateEventAccessState(eventItemPrivate.Id, eventItemPrivate.AccessToggle);
+        await EventPrivateService.UpdateEventAccessState(eventItemPrivate.Id, eventItemPrivate.AccessToggle);
     }
 
-    private void OnStatusToggleChanged(EventItemPrivateModelDTO eventItemPrivate)
+    private async Task OnStatusToggleChanged(EventItemPrivateModelDTO eventItemPrivate)
     {
         eventItemPrivate.StatusToggle = !eventItemPrivate.StatusToggle;
         eventItemPrivate.Status = eventItemPrivate.StatusToggle ? EventStatus.Active : EventStatus.Inactive;
-        EventPrivateService.UpdateEventActiveState(eventItemPrivate.Id, eventItemPrivate.StatusToggle);
+        await EventPrivateService.UpdateEventActiveState(eventItemPrivate.Id, eventItemPrivate.StatusToggle);
     }
 
     private void HandleError(string message)
     {
         ErrorComponent.ShowError("Error!", message);
+    }
+
+    public void Dispose()
+    {
+        InternalNotificationService.OnError -= HandleError;
+        if (_timer is not null)
+        {
+            _timer.Elapsed -= OnTimerElapsed;
+            _timer.Stop();
+            _timer.Dispose();
+        }
     }
 }

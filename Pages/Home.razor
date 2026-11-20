@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @page "/public"
 @using System.Timers
 @using HowClient.Common.Routing
@@ -12,6 +12,7 @@
 @inject IEventPublicService EventPublicService
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <PageTitle>Home</PageTitle>
 <div class="d-flex gap-2 mb-8">
@@ -111,14 +112,24 @@
         await OnPageChangedAsync(_currentPageNumber);
     }
 
-    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    private async void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
         foreach (var eventItem in _eventsToDisplay)
         {
             eventItem.Duration = DateTime.Now - eventItem.CreatedAt;
         }
 
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        if (_timer is not null)
+        {
+            _timer.Elapsed -= OnTimerElapsed;
+            _timer.Stop();
+            _timer.Dispose();
+        }
     }
 
     private async Task ReloadEvents()

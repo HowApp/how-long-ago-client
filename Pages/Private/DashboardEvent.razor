@@ -19,13 +19,16 @@
 @inject AppConfigurations AppConfigurations
 @inject NavigationManager NavigationManager
 @inject InternalNotificationService InternalNotificationService
+@implements IDisposable
 
 <div class="d-flex gap-2 mb-8 m-2">
-    <button class="btn btn-primary" @onclick="LoadEventDetail">Reload Event</button>
+    <button class="btn btn-primary" @onclick="ReloadEventAndRecords">Reload Event</button>
+    <button class="btn btn-success" @onclick="ShowCreateRecordModal">Add Record</button>
 </div>
 
 <Modal @ref="_createEventModal" Size="ModalSize.Large"></Modal>
 <Modal @ref="_uploadImageModal" Size="ModalSize.Large"></Modal>
+<Modal @ref="_recordModal" Size="ModalSize.Large"></Modal>
 
 @if (_event is not null)
 {
@@ -47,11 +50,11 @@
                     <p class="card-text">Created At: @_event.CreatedAt</p>
                     <p class="card-text">Access: @_event.Access</p>
                     <div class="mb-3">
-                        <Switch @onclick="() => OnAccessToggleChanged()" Value="_event.AccessToggle" ValueExpression="() => _event.AccessToggle" Label="Set public"/>
+                        <Switch @onclick="async () => await OnAccessToggleChanged()" Value="_event.AccessToggle" ValueExpression="() => _event.AccessToggle" Label="Set public"/>
                     </div>
                     <p class="card-text">Status: @_event.Status</p>
                     <div class="mb-3">
-                        <Switch @onclick="() => OnStatusToggleChanged()" Value="_event.StatusToggle" ValueExpression="() => _event.StatusToggle" Label="Set active"/>
+                        <Switch @onclick="async () => await OnStatusToggleChanged()" Value="_event.StatusToggle" ValueExpression="() => _event.StatusToggle" Label="Set active"/>
                     </div>
                     <p class="card-text">Likes: @_event.Likes</p>
                     <p class="card-text">Dislikes: @_event.Dislikes</p>
@@ -91,7 +94,21 @@
 
     foreach (var record in _recordsToDisplay)
     {
-        <div class="card">
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Record #@record.Id</span>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-dark" @onclick="() => ShowUploadRecordImagesModal(record.Id)">
+                        <Icon Name="IconName.ImageFill"/> Upload Images
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ShowUpdateRecordModal(record)">
+                        <Icon Name="IconName.Pencil"/> Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => DeleteRecord(record.Id)">
+                        <Icon Name="IconName.Trash"/> Delete
+                    </button>
+                </div>
+            </div>
             <div class="row" >
                 <div class="col-md-4">
                     <div class="card-body">
@@ -147,6 +164,10 @@
 
     private Modal _createEventModal = null!;
     private Modal _uploadImageModal = null!;
+    private Modal _recordModal = null!;
+
+    private int _selectedRecordIdForEdit;
+    private int _selectedRecordIdForUpload;
 
     private int _count = 0;
     private EventItemPrivateModelDTO _event;
@@ -186,11 +207,20 @@
         await OnPageChangedAsync(_currentPageNumber);
     }
 
-    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    private async void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
-        _event.Duration = DateTime.Now - _event.CreatedAt;
+        if (_event is not null)
+        {
+            _event.Duration = DateTime.Now - _event.CreatedAt;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 
-        StateHasChanged();
+    private async Task ReloadEventAndRecords()
+    {
+        _loadedRecords.Clear();
+        _recordsToDisplay.Clear();
+        await OnPageChangedAsync(1);
     }
 
     private async Task OnPageChangedAsync(int pageNumber)
@@ -211,7 +241,7 @@
         {
             if (_currentPageNumber > _totalPage || _currentPageNumber < 1)
             {
-                _currentPageNumber = _totalPage;
+                _currentPageNumber = _totalPage == 0 ? 1 : _totalPage;
             }
             await LoadRecords();
             await GetCurrentPage();
@@ -248,6 +278,10 @@
     private async Task LoadEventDetail()
     {
         _event = await EventPrivateService.GetEventById(EventId);
+        if (_event?.Image is null || _event.UserInfo?.Image is null)
+        {
+            return;
+        }
 
         _event.Image.MainHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.MainHash);
         _event.Image.ThumbnailHash = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _event.Image.ThumbnailHash);
@@ -264,7 +298,7 @@
     {
         var parameters = new Dictionary<string, object>();
         parameters.Add("Name", _event.Name);
-        parameters.Add("OnclickCallback", EventCallback.Factory.Create<string>(this, UpdateEvent));
+        parameters.Add("OnClickCallback", EventCallback.Factory.Create<string>(this, UpdateEvent));
         await _createEventModal.ShowAsync<CreateUpdateEventModal>(title:"Update Event", parameters: parameters);
     }
 
@@ -272,8 +306,79 @@
     {
         var parameters = new Dictionary<string, object>();
         parameters.Add("EventId", _event.Id);
-        parameters.Add("OnclickCallback", EventCallback.Factory.Create<InputFileChangeEventArgs>(this, UploadImage));
+        parameters.Add("Multiple", false);
+        parameters.Add("OnClickCallback", EventCallback.Factory.Create<InputFileChangeEventArgs>(this, UploadImage));
         await _uploadImageModal.ShowAsync<UploadImageModal>(title: "Upload Image", parameters: parameters);
+    }
+
+    private async Task ShowCreateRecordModal()
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            { "Description", string.Empty },
+            { "OnClickCallback", EventCallback.Factory.Create<string>(this, CreateRecord) }
+        };
+        await _recordModal.ShowAsync<CreateUpdateRecordModal>(title: "Add New Record", parameters: parameters);
+    }
+
+    private async Task CreateRecord(string description)
+    {
+        await _recordModal.HideAsync();
+        var recordId = await RecordPrivateService.CreateRecord(EventId, description);
+        if (recordId > 0)
+        {
+            await ReloadEventAndRecords();
+        }
+    }
+
+    private async Task ShowUpdateRecordModal(RecordItemPrivateModelDTO record)
+    {
+        _selectedRecordIdForEdit = record.Id;
+        var parameters = new Dictionary<string, object>
+        {
+            { "Description", record.Description },
+            { "OnClickCallback", EventCallback.Factory.Create<string>(this, UpdateRecord) }
+        };
+        await _recordModal.ShowAsync<CreateUpdateRecordModal>(title: "Edit Record", parameters: parameters);
+    }
+
+    private async Task UpdateRecord(string description)
+    {
+        await _recordModal.HideAsync();
+        var updated = await RecordPrivateService.UpdateRecord(EventId, _selectedRecordIdForEdit, description);
+        if (updated)
+        {
+            await ReloadEventAndRecords();
+        }
+    }
+
+    private async Task DeleteRecord(int recordId)
+    {
+        var deleted = await RecordPrivateService.DeleteRecord(EventId, recordId);
+        if (deleted)
+        {
+            await ReloadEventAndRecords();
+        }
+    }
+
+    private async Task ShowUploadRecordImagesModal(int recordId)
+    {
+        _selectedRecordIdForUpload = recordId;
+        var parameters = new Dictionary<string, object>
+        {
+            { "EventId", EventId },
+            { "Multiple", true },
+            { "OnClickCallback", EventCallback.Factory.Create<InputFileChangeEventArgs>(this, UploadRecordImages) }
+        };
+        await _uploadImageModal.ShowAsync<UploadImageModal>(title: "Upload Record Images (up to 5)", parameters: parameters);
+    }
+
+    private async Task UploadRecordImages(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles(5);
+        var result = await RecordPrivateService.UploadRecordImages(EventId, _selectedRecordIdForUpload, files);
+        OnImageProcessing(result);
+        await _uploadImageModal.HideAsync();
     }
 
     private async Task UpdateEvent(string name)
@@ -289,7 +394,6 @@
 
     private async Task UploadImage(InputFileChangeEventArgs e)
     {
-        Console.WriteLine("Start uploading file");
         var maxAllowedFiles = 1;
 
         foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
@@ -310,18 +414,18 @@
         }
     }
 
-    private void OnAccessToggleChanged()
+    private async Task OnAccessToggleChanged()
     {
         _event.AccessToggle = !_event.AccessToggle;
         _event.Access = _event.AccessToggle ? EventAccessType.Public : EventAccessType.Private;
-        EventPrivateService.UpdateEventAccessState(_event.Id, _event.AccessToggle);
+        await EventPrivateService.UpdateEventAccessState(_event.Id, _event.AccessToggle);
     }
 
-    private void OnStatusToggleChanged()
+    private async Task OnStatusToggleChanged()
     {
         _event.StatusToggle = !_event.StatusToggle;
         _event.Status = _event.StatusToggle ? EventStatus.Active : EventStatus.Inactive;
-        EventPrivateService.UpdateEventActiveState(_event.Id, _event.StatusToggle);
+        await EventPrivateService.UpdateEventActiveState(_event.Id, _event.StatusToggle);
     }
 
     private void HandleError(string message)
@@ -338,6 +442,17 @@
         else
         {
             ToastService.Notify(new (ToastType.Warning, $"Image failed processing: {DateTime.Now}"));
+        }
+    }
+
+    public void Dispose()
+    {
+        InternalNotificationService.OnError -= HandleError;
+        if (_timer is not null)
+        {
+            _timer.Elapsed -= OnTimerElapsed;
+            _timer.Stop();
+            _timer.Dispose();
         }
     }
 }

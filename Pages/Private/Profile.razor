@@ -1,0 +1,230 @@
+@page "/authorized/profile"
+@using HowClient.Common.Routing
+@using HowClient.Components
+@using HowClient.Components.Modals
+@using HowClient.Configuration
+@using HowClient.Infrastructure.DTO.Models
+@using HowClient.Infrastructure.DTO.Private.Account
+@using HowClient.Infrastructure.Helpers
+@using HowClient.Services.InternalNotification
+@using HowClient.Services.Private.Account
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject IAccountPrivateService AccountPrivateService
+@inject AppConfigurations AppConfigurations
+@inject NavigationManager NavigationManager
+@inject InternalNotificationService InternalNotificationService
+@inject ToastService ToastService
+@implements IDisposable
+
+<PageTitle>Profile & Shared Access</PageTitle>
+
+<Modal @ref="_uploadAvatarModal" Size="ModalSize.Large"></Modal>
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">My Profile</h5>
+            </div>
+            <div class="card-body">
+                @if (_userInfo is not null)
+                {
+                    <div class="text-center mb-3">
+                        <img src="@_avatarUrl" class="rounded-circle d-block mx-auto mb-2" alt="Avatar" style="height: 120px; width: 120px; object-fit: cover;" />
+                        <button type="button" class="btn btn-sm btn-outline-dark" @onclick="ShowUploadAvatarModal">
+                            <Icon Name="IconName.ImageFill" /> Change Avatar
+                        </button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <InputText class="form-control" @bind-Value="_firstName" placeholder="First Name" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <InputText class="form-control" @bind-Value="_lastName" placeholder="Last Name" />
+                    </div>
+                    <button class="btn btn-primary w-100" @onclick="SaveProfile">Save Profile</button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Shared Users (Who Can Access My Events)</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-2 mb-3">
+                    <InputText class="form-control" placeholder="Search users by name..." @bind-Value="_userSearchQuery" />
+                    <button class="btn btn-outline-primary" @onclick="SearchUsers">Search</button>
+                </div>
+
+                @if (_searchResults.Any())
+                {
+                    <h6>Search Results</h6>
+                    <ul class="list-group mb-3">
+                        @foreach (var user in _searchResults)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@user.FirstName @user.LastName (ID: @user.Id)</span>
+                                <button class="btn btn-sm btn-success" @onclick="() => AddSharedUser(user.Id)">
+                                    Share Access
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <h6>Currently Shared With</h6>
+                @if (_sharedUsers.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var sharedUser in _sharedUsers)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@sharedUser.FirstName @sharedUser.LastName (ID: @sharedUser.Id)</span>
+                                <button class="btn btn-sm btn-danger" @onclick="() => RemoveSharedUser(sharedUser.Id)">
+                                    <Icon Name="IconName.Trash" /> Remove
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted">You haven't shared access with any users yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    Task<AuthenticationState> AuthenticationState { get; set; }
+
+    [CascadingParameter(Name = "ErrorComponent")]
+    protected IErrorComponent ErrorComponent { get; set; }
+
+    private Modal _uploadAvatarModal = null!;
+    private GetUserInfoPrivateResponseDTO _userInfo;
+    private string _firstName = string.Empty;
+    private string _lastName = string.Empty;
+    private string _avatarUrl = string.Empty;
+
+    private string _userSearchQuery = string.Empty;
+    private List<UserInfoModelShortDTO> _searchResults = new();
+    private List<UserInfoModelShortDTO> _sharedUsers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState is not null)
+        {
+            var authState = await AuthenticationState;
+            var user = authState?.User;
+            if (user?.Identity is not null && !user.Identity.IsAuthenticated)
+            {
+                NavigationManager.NavigateTo(Rout.Home.HomePublicPage);
+                return;
+            }
+        }
+
+        InternalNotificationService.OnError += HandleError;
+
+        await LoadProfile();
+        await LoadSharedUsers();
+    }
+
+    private async Task LoadProfile()
+    {
+        _userInfo = await AccountPrivateService.GetCurrentUserInfo();
+        _firstName = _userInfo.FirstName ?? string.Empty;
+        _lastName = _userInfo.LastName ?? string.Empty;
+        _avatarUrl = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, _userInfo.Image?.ThumbnailHash ?? string.Empty);
+    }
+
+    private async Task SaveProfile()
+    {
+        var updated = await AccountPrivateService.UpdateUserInfo(_firstName, _lastName);
+        if (updated)
+        {
+            ToastService.Notify(new(ToastType.Success, "Profile updated successfully!"));
+            await LoadProfile();
+        }
+    }
+
+    private async Task ShowUploadAvatarModal()
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            { "Multiple", false },
+            { "OnClickCallback", EventCallback.Factory.Create<InputFileChangeEventArgs>(this, UploadAvatar) }
+        };
+        await _uploadAvatarModal.ShowAsync<UploadImageModal>(title: "Upload Profile Avatar", parameters: parameters);
+    }
+
+    private async Task UploadAvatar(InputFileChangeEventArgs e)
+    {
+        await _uploadAvatarModal.HideAsync();
+        var file = e.File;
+        if (file is not null)
+        {
+            var result = await AccountPrivateService.UpdateUserImage(file);
+            if (result is not null)
+            {
+                _avatarUrl = ImagePathHelper.GetPath(AppConfigurations.BackendUrl, result.ThumbnailHash);
+                ToastService.Notify(new(ToastType.Success, "Avatar updated successfully!"));
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task SearchUsers()
+    {
+        if (string.IsNullOrWhiteSpace(_userSearchQuery))
+        {
+            _searchResults.Clear();
+            return;
+        }
+
+        _searchResults = await AccountPrivateService.SearchUsersByName(_userSearchQuery.Trim());
+    }
+
+    private async Task LoadSharedUsers()
+    {
+        _sharedUsers = await AccountPrivateService.GetSharedUsers();
+    }
+
+    private async Task AddSharedUser(int userId)
+    {
+        var added = await AccountPrivateService.AddSharedUser(userId);
+        if (added)
+        {
+            ToastService.Notify(new(ToastType.Success, "User added to shared access!"));
+            await LoadSharedUsers();
+        }
+    }
+
+    private async Task RemoveSharedUser(int sharedUserId)
+    {
+        var removed = await AccountPrivateService.DeleteSharedUser(sharedUserId);
+        if (removed)
+        {
+            ToastService.Notify(new(ToastType.Success, "Shared access removed!"));
+            await LoadSharedUsers();
+        }
+    }
+
+    private void HandleError(string message)
+    {
+        ErrorComponent?.ShowError("Error!", message);
+    }
+
+    public void Dispose()
+    {
+        InternalNotificationService.OnError -= HandleError;
+    }
+}

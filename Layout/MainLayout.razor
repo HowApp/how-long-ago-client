@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using Components
 @using HowClient.Common.Routing
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
@@ -40,7 +40,7 @@
                     </NotAuthorized>
                 </AuthorizeView>
                 <button type="button" class="btn btn-link" @onclick="@ShowOffCanvasContent">
-                    Notifications <Badge Color="BadgeColor.Danger"><Icon Name="IconName.Bicycle"/> @_errors.Count</Badge>
+                    Notifications <Badge Color="BadgeColor.Danger"><Icon Name="IconName.BellFill"/> @_errors.Count</Badge>
                 </button>
             </div>
         </div>
@@ -83,8 +83,13 @@
 
     private async Task<SidebarDataProviderResult> SidebarDataProvider(SidebarDataProviderRequest request)
     {
-        if (_navItems is null)
-            _navItems = GetNavItems();
+        if (AuthenticationState is not null)
+        {
+            var user = (await AuthenticationState).User;
+            _isAuthorized = user.Identity != null && user.Identity.IsAuthenticated;
+        }
+
+        _navItems = GetNavItems();
 
         return await Task.FromResult(request.ApplyTo(_navItems));
     }
@@ -95,7 +100,8 @@
         {
             new NavItem { Id = "1", Href = _isAuthorized ? Rout.Home.HomePrivatePage : Rout.Home.HomePublicPage, IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
             new NavItem { Id = "2", Href = Rout.Dashboard.MainDashboard, IconName = IconName.Database, Text = "Dashboard"},
-            new NavItem { Id = "3", Href = "/hub-test", IconName = IconName.Github, Text = "HubTest"}
+            new NavItem { Id = "3", Href = Rout.Dashboard.ProfilePage, IconName = IconName.PersonCircle, Text = "Profile & Sharing"},
+            new NavItem { Id = "4", Href = "/hub-test", IconName = IconName.Github, Text = "HubTest"}
         };
 
         return _navItems;

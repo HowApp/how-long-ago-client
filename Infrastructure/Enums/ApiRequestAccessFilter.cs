@@ -4,5 +4,6 @@ public enum ApiRequestAccessFilter
 {
     None = 1,
     Own = 2,
-    Shared = 3
+    Shared = 3,
+    Saved = 4
 }

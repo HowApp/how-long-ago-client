@@ -1,0 +1,59 @@
+@using System.ComponentModel.DataAnnotations
+
+<EditForm EditContext="@_editContext" OnValidSubmit="HandleOnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group row mb-3">
+        <label class="col-md-3 col-form-label">Description: <span class="text-danger">*</span></label>
+        <div class="col-md-9">
+            <TextAreaInput @bind-Value="@_model.Description" Rows="4" Placeholder="Enter record description" />
+            <ValidationMessage For="@(() => _model.Description)" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 text-right">
+            <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="ResetForm">Reset</Button>
+            <Button Type="ButtonType.Submit" Color="ButtonColor.Success" Class="float-end me-2">Submit</Button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private RecordFormModel _model;
+    private EditContext _editContext;
+
+    [Parameter] public string Description { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> OnClickCallback { get; set; }
+
+    public async Task HandleOnValidSubmit()
+    {
+        if (_editContext.Validate())
+        {
+            await OnClickCallback.InvokeAsync(_model.Description);
+        }
+    }
+
+    private void ResetForm()
+    {
+        _model.Description = string.Empty;
+        _editContext = new EditContext(_model);
+    }
+
+    protected override void OnInitialized()
+    {
+        _model = new RecordFormModel
+        {
+            Description = Description
+        };
+        _editContext = new EditContext(_model);
+        base.OnInitialized();
+    }
+
+    private class RecordFormModel
+    {
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Description required.")]
+        [StringLength(2048, ErrorMessage = "Description must be at most 2048 characters.")]
+        public string Description { get; set; }
+    }
+}

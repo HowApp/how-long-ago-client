@@ -11,6 +11,7 @@ public class ApiAccessHelper
             ApiRequestAccessFilter.None => "public-active",
             ApiRequestAccessFilter.Own => "own",
             ApiRequestAccessFilter.Shared => "shared",
+            ApiRequestAccessFilter.Saved => "saved",
             _ => string.Empty
         };
     }

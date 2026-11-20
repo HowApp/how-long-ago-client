@@ -18,6 +18,9 @@ public sealed class AuthorizedClientAPI : BaseClientAPI
     internal new async Task<TReturn> PostAsync<TReturn>(string uri) => 
         await base.PostAsync<TReturn>(uri);
 
+    internal new async Task<TReturn> PutAsync<TReturn, TRequest>(string uri, TRequest request) =>
+        await base.PutAsync<TReturn, TRequest>(uri, request);
+
     internal new async Task<TReturn> PatchAsync<TReturn, TRequest>(string uri, TRequest request) =>
         await base.PatchAsync<TReturn, TRequest>(uri, request);
 
@@ -26,4 +29,7 @@ public sealed class AuthorizedClientAPI : BaseClientAPI
 
     internal new async Task<TReturn> DeleteAsync<TReturn>(string uri) =>
         await base.DeleteAsync<TReturn>(uri);
+
+    internal new async Task<TReturn> DeleteAsync<TReturn, TRequest>(string uri, TRequest request) =>
+        await base.DeleteAsync<TReturn, TRequest>(uri, request);
 }
